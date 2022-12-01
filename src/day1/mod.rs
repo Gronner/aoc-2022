@@ -13,13 +13,13 @@ fn get_input() -> Vec<String> {
 
 fn parse_input(input: Vec<String>) -> Vec<u32> {
     let mut findings = vec![];
-    let mut tmp = 0;
+    let mut elf = 0;
     for line in input {
         if line != "" {
-            tmp +=  line.parse::<u32>().unwrap();
+            elf +=  line.parse::<u32>().unwrap();
         } else {
-            findings.push(tmp);
-            tmp = 0;
+            findings.push(elf);
+            elf = 0;
         }
     }
     findings
@@ -37,8 +37,8 @@ fn part1(input: &Vec<u32>) -> u32 {
 
 fn part2(input: &Vec<u32>) -> u32 {
     let mut input = input.clone();
-    input.sort();
-    input[input.len()-1] + input[input.len()-2] + input[input.len()-3] 
+    input.sort_by(|a, b| a.cmp(b).reverse());
+    input.iter().take(3).sum()
 }
 
 #[cfg(test)]
@@ -48,12 +48,12 @@ mod tests {
     #[test]
     fn day0_part1_output() {
         let input = parse_input(get_input());
-        assert_eq!(744475, part1(&input));
+        assert_eq!(71502, part1(&input));
     }
 
     #[test]
     fn day0_part2_output() {
         let input = parse_input(get_input());
-        assert_eq!(70276940, part2(&input));
+        assert_eq!(208191, part2(&input));
     }
 }
