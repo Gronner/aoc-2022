@@ -1,5 +1,4 @@
 use aoc_downloader::download_day;
-use std::collections::HashMap;
 
 const DAY: u32 = 2;
 
@@ -27,66 +26,134 @@ pub fn run_day() {
     println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
+enum Play {
+    Rock,
+    Paper,
+    Scissors,
+}
+
+impl From<char> for Play {
+    fn from(input: char) -> Self {
+        match input { 
+            'A' | 'X' => Self::Rock,
+            'B' | 'Y' => Self::Paper,
+            'C' | 'Z' => Self::Scissors,
+            e => panic!("Unknown play: {}", e),
+        }
+    }
+}
+
+impl PartialOrd for Play {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        use std::cmp::Ordering::*;
+
+        match (self, other) {
+            (Self::Rock, Self::Paper) => Some(Less),
+            (Self::Rock, Self::Scissors) => Some(Greater),
+            (Self::Paper, Self::Rock) => Some(Greater),
+            (Self::Paper, Self::Scissors) => Some(Less),
+            (Self::Scissors, Self::Rock) => Some(Less),
+            (Self::Scissors, Self::Paper) => Some(Greater),
+            (_, _) => Some(Equal),
+        }
+    }
+}
+
+impl std::fmt::Display for Play {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Self::Rock => "Rock",
+            Self::Paper => "Paper",
+            Self::Scissors => "Scissors",
+        })
+    }
+}
+
+impl Play {
+    pub fn scoring(&self) -> u32 {
+        match self {
+            Self::Rock => 1,
+            Self::Paper => 2,
+            Self::Scissors => 3,
+        }
+    }
+
+    fn compare(&self, other: &Self) -> Outcome {
+        match (self, other) {
+            (Self::Rock, Self::Scissors) => Outcome::Win,
+            (Self::Rock, Self::Paper) => Outcome::Loss,
+            (Self::Paper, Self::Rock) => Outcome::Win,
+            (Self::Paper, Self::Scissors) => Outcome::Loss,
+            (Self::Scissors, Self::Paper) => Outcome::Win,
+            (Self::Scissors, Self::Rock) => Outcome::Loss,
+            (_, _) => Outcome::Draw,
+        }
+    }
+}
+
 fn part1(input: &Vec<Vec<char>>) -> u32 {
-    let mut points = HashMap::new();
-    points.insert( 'X', 1);
-    points.insert( 'Y', 2);
-    points.insert( 'Z', 3);
+    let strategy = input.iter()
+        .map(|round| (Play::from(round[0]), Play::from(round[2])))
+        .collect::<Vec<_>>();
+
     let mut score = 0;
-    for round in input {
-        score += match (round[0], round[2]) {
-            ('A', 'X') => 3,
-            ('B', 'Y') => 3,
-            ('C', 'Z') => 3,
-            ('A', 'Y') => 6,
-            ('B', 'Z') => 6,
-            ('C', 'X') => 6,
-            ('A', 'Z') => 0,
-            ('B', 'X') => 0,
-            ('C', 'Y') => 0,
-            (_, _) => panic!(),
-        };
-        score += points.get(&round[2]).unwrap();
+    for round in strategy {
+        score += round.1.compare(&round.0).scoring();
+        score += round.1.scoring();
     }
     score
 }
 
+pub enum Outcome {
+    Loss,
+    Draw,
+    Win,
+}
+
+impl From<char> for Outcome {
+    fn from(input: char) -> Self {
+        match input {
+            'X' => Self::Loss,
+            'Y' => Self::Draw,
+            'Z' => Self::Win,
+            e => panic!("Unkown result: {}", e),
+        }
+    }
+}
+
+impl Outcome {
+    pub fn scoring(&self) -> u32 {
+        match self {
+            Self::Loss => 0,
+            Self::Draw => 3,
+            Self::Win => 6,
+        }
+    }
+}
+
+impl Play {
+    pub fn outcome(&self, result: Outcome) -> Self {
+        match (self, result) {
+            (Play::Rock, Outcome::Win) => Play::Paper,
+            (Play::Rock, Outcome::Loss) => Play::Scissors,
+            (Play::Paper, Outcome::Win) => Play::Scissors,
+            (Play::Paper, Outcome::Loss) => Play::Rock,
+            (Play::Scissors, Outcome::Win) => Play::Rock,
+            (Play::Scissors, Outcome::Loss) => Play::Paper,
+            (_, Outcome::Draw) => *self,
+        }
+    }
+}
+
 fn part2(input: &Vec<Vec<char>>) -> u32 {
-    let mut points = HashMap::new();
-    points.insert( 'X', 1);
-    points.insert( 'Y', 2);
-    points.insert( 'Z', 3);
-
-    let mut outcome_A = HashMap::new();
-    outcome_A.insert('Y', 'X');
-    outcome_A.insert('X', 'Z');
-    outcome_A.insert('Z', 'Y');
-
-    let mut outcome_B = HashMap::new();
-    outcome_B.insert('Y', 'Y');
-    outcome_B.insert('X', 'X');
-    outcome_B.insert('Z', 'Z');
-
-    let mut outcome_C = HashMap::new();
-    outcome_C.insert('Y', 'Z');
-    outcome_C.insert('X', 'Y');
-    outcome_C.insert('Z', 'X');
-
+    let playbook = input.iter()
+        .map(|round| (Play::from(round[0]), Outcome::from(round[2])))
+        .collect::<Vec<_>>();
     let mut score = 0;
-    for round in input {
-        score += match (round[0], round[2]) {
-            (_, 'X') => 0,
-            (_, 'Y') => 3,
-            (_, 'Z') => 6,
-            (_, _) => panic!(),
-        };
-        let outcome = match round[0] {
-            'A' => outcome_A.get(&round[2]).unwrap(),
-            'B' => outcome_B.get(&round[2]).unwrap(),
-            'C' => outcome_C.get(&round[2]).unwrap(),
-            _ => panic!(),
-        };
-        score += points.get(&outcome).unwrap();
+    for round in playbook {
+        score += round.1.scoring();
+        score += round.0.outcome(round.1).scoring();
     }
     score
 }
