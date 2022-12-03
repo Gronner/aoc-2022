@@ -26,6 +26,14 @@ pub fn run_day() {
     println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
 }
 
+fn score_item(item: char) -> u32 {
+    if item.is_lowercase() {
+        item as u32 - ('a' as u32) + 1
+    } else {
+        item as u32 - ('A' as u32) + 27
+    }
+}
+
 fn part1(input: &Vec<Vec<char>>) -> u32 {
     let mut priority = 0;
     for backpack in input {
@@ -34,13 +42,7 @@ fn part1(input: &Vec<Vec<char>>) -> u32 {
         let right_compartment = HashSet::from_iter(&backpack[bagsize/2..]);
         let in_common = left_compartment.intersection(&right_compartment);
         priority += in_common.into_iter()
-            .map(|&&item| {
-                if item.is_lowercase() {
-                    item as u32 - ('a' as u32) + 1
-                } else {
-                    item as u32 - ('A' as u32) + 27
-                }
-            })
+            .map(|&&item| score_item(item))
             .sum::<u32>();
     }
     priority
@@ -49,19 +51,13 @@ fn part1(input: &Vec<Vec<char>>) -> u32 {
 fn part2(input: &Vec<Vec<char>>) -> u32 {
     let mut priority = 0;
     for backpack in input.chunks(3) {
-        let elf1: HashSet<char> = HashSet::from_iter(backpack[0].clone());
-        let elf2: HashSet<char> = HashSet::from_iter(backpack[1].clone());
-        let elf3: HashSet<char> = HashSet::from_iter(backpack[2].clone());
+        let elf1: HashSet<&char> = HashSet::from_iter(&backpack[0]);
+        let elf2 = HashSet::from_iter(&backpack[1]);
+        let elf3 = HashSet::from_iter(&backpack[2]);
         let in_common = elf1.intersection(&elf2).cloned().collect::<HashSet<_>>();
         let in_common = in_common.intersection(&elf3);
         priority += in_common.into_iter()
-            .map(|&item| {
-                if item.is_lowercase() {
-                    item as u32 - ('a' as u32) + 1
-                } else {
-                    item as u32 - ('A' as u32) + 27
-                }
-            })
+            .map(|&&item| score_item(item))
             .sum::<u32>();
     }
     priority
@@ -74,12 +70,12 @@ mod tests {
     #[test]
     fn day0_part1_output() {
         let input = parse_input(get_input());
-        assert_eq!(744475, part1(&input));
+        assert_eq!(7821, part1(&input));
     }
 
     #[test]
     fn day0_part2_output() {
         let input = parse_input(get_input());
-        assert_eq!(70276940, part2(&input));
+        assert_eq!(2752, part2(&input));
     }
 }
