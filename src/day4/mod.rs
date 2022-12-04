@@ -1,13 +1,6 @@
-use aoc_downloader::download_day;
-use regex::Regex;
-use once_cell::sync::OnceCell;
+use std::{str::FromStr, string::ParseError};
 
-macro_rules! regex {
-    ($re:literal $(,)?) => {{
-        static RE: once_cell::sync::OnceCell<regex::Regex> = once_cell::sync::OnceCell::new();
-        RE.get_or_init(|| regex::Regex::new($re).unwrap())
-    }};
-}
+use aoc_downloader::download_day;
 
 const DAY: u32 = 4;
 
@@ -20,20 +13,64 @@ fn get_input() -> Vec<String> {
     reader.lines().collect::<Result<_, _>>().unwrap()
 }
 
-fn parse_input(input: Vec<String>) -> Vec<Vec<(u32, u32)>> {
+struct Section {
+    start: u32,
+    end: u32,
+}
+
+impl Section {
+    pub fn contained(&self, other: &Self) -> bool {
+        self.start <= other.start && self.end >= other.end ||
+            other.start <= self.start && other.end >= self.end 
+    }
+
+    pub fn not_overlapping(&self, other: &Self) -> bool {
+        self.end < other.start && self.end < other.end ||
+            other.end < self.start && other.end < self.end
+    }
+}
+
+struct ElfPair {
+    first: Section,
+    second: Section,
+}
+
+impl ElfPair {
+    pub fn one_bored(&self) -> bool {
+        self.first.contained(&self.second)
+    }
+
+    pub fn full_work(&self) -> bool {
+        self.first.not_overlapping(&self.second)
+    }
+}
+
+impl FromStr for ElfPair {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let re = regex!(r"(\d+)-(\d+),(\d+)-(\d+)");
+        
+        Ok(re.captures(s).and_then(|captured| {
+            Some(ElfPair {
+                first: Section {
+                    start: captured[1].parse::<u32>().ok()?,
+                    end: captured[2].parse::<u32>().ok()?,
+                },
+                second: Section {
+                    start: captured[3].parse::<u32>().ok()?,
+                    end: captured[4].parse::<u32>().ok()?,
+                },
+            })
+        }).unwrap())
+    }
+}
+
+fn parse_input(input: Vec<String>) -> Vec<ElfPair> {
     let re = regex!(r"(\d+)-(\d+),(\d+)-(\d+)");
     input
         .iter()
-        .map(|v| {
-            re.captures(v).and_then(|captured| {
-                Some(vec![
-                    (captured[1].parse::<u32>().unwrap(),
-                    captured[2].parse::<u32>().unwrap()),
-                    (captured[3].parse::<u32>().unwrap(),
-                    captured[4].parse::<u32>().unwrap())],
-                )
-            }).unwrap()
-        })
+        .map(|elfpair| ElfPair::from_str(elfpair).unwrap())
         .collect::<Vec<_>>()
 }
 
@@ -43,41 +80,17 @@ pub fn run_day() {
     println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
 }
 
-fn part1(input: &Vec<Vec<(u32, u32)>>) -> u32 {
-    let mut contained = 0;
-    for elves in input {
-        if elves[0].0 <= elves[1].0 && elves[0].1 >= elves[1].1 {
-            contained += 1;
-            continue;
-        }
-        if elves[1].0 <= elves[0].0 && elves[1].1 >= elves[0].1 {
-            contained += 1;
-        }
-    }
-    contained
+fn part1(input: &Vec<ElfPair>) -> u32 {
+    input.iter()
+        .filter(|ep| ep.one_bored())
+        .count() as u32
 }
 
-fn part2(input: &Vec<Vec<(u32, u32)>>) -> u32 {
-    let mut contained = 0;
-    for elves in input {
-        if elves[0].0 <= elves[1].0 && elves[0].1 >= elves[1].1 {
-            contained += 1;
-            continue;
-        }
-        if elves[1].0 <= elves[0].0 && elves[1].1 >= elves[0].1 {
-            contained += 1;
-            continue;
-        }
-        if elves[0].0 >= elves[1].0 && elves[0].0 <= elves[1].1 {
-            contained += 1;
-            continue;
-        }
-        if elves[1].0 >= elves[0].0 && elves[1].0 <= elves[0].1 {
-            contained += 1;
-            continue;
-        }
-    }
-    contained
+fn part2(input: &Vec<ElfPair>) -> u32 {
+    let all_pairs = input.len() as u32;
+    all_pairs - input.iter()
+        .filter(|ep| ep.full_work())
+        .count() as u32
 }
 
 #[cfg(test)]
@@ -87,12 +100,12 @@ mod tests {
     #[test]
     fn day0_part1_output() {
         let input = parse_input(get_input());
-        assert_eq!(744475, part1(&input));
+        assert_eq!(595, part1(&input));
     }
 
     #[test]
     fn day0_part2_output() {
         let input = parse_input(get_input());
-        assert_eq!(70276940, part2(&input));
+        assert_eq!(952, part2(&input));
     }
 }

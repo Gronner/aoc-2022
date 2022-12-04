@@ -1,6 +1,8 @@
 #![feature(int_roundings)]
 #[macro_use]
 
+mod utils;
+
 mod day1;
 mod day2;
 mod day3;
