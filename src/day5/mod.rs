@@ -37,9 +37,11 @@ impl FromStr for Command {
 fn parse_input(input: Vec<String>) -> (Vec<Vec<char>>, Vec<Command>) {
     let mut switch = true;
     let mut commands = Vec::new();
-    for line in input {
+    let mut stack_line = 0;
+    for (idx, line) in input.iter().enumerate() {
         if switch {
             if line == "" {
+                stack_line = idx - 1;
                 switch = false;
                 continue;
             }
@@ -48,17 +50,23 @@ fn parse_input(input: Vec<String>) -> (Vec<Vec<char>>, Vec<Command>) {
         }
     }
 
-    let stacks = vec![
-        vec!['B', 'V', 'S', 'N', 'T', 'C', 'H', 'Q'],
-        vec!['W', 'D', 'B', 'G',],
-        vec!['F', 'W', 'R', 'T', 'S', 'Q', 'B'],
-        vec!['L', 'G', 'W', 'S', 'Z', 'J', 'D', 'N'],
-        vec!['M', 'P', 'D', 'V', 'F'],
-        vec!['F', 'W', 'J'],
-        vec!['L', 'N', 'Q', 'B', 'J', 'V'],
-        vec!['G', 'T', 'R', 'C', 'J', 'Q', 'S', 'N'],
-        vec!['J', 'S', 'Q', 'C', 'W', 'D', 'M'],
-    ];
+    let stack_count = input[stack_line].chars()
+        .filter(|c| !c.is_whitespace())
+        .last()
+        .map(|value| value.to_digit(10).unwrap() as usize)
+        .unwrap();
+
+    let mut stacks = vec![Vec::new(); stack_count];
+    const OFFSET: usize = 1;
+
+    for line in input[0..stack_line].iter().rev() {
+        for stack_id in 0..stack_count {
+            if let Some(chest) = line.chars().nth(OFFSET + stack_id * 4) {
+                if chest == ' ' { continue; }
+                stacks[stack_id].push(chest);
+            }
+        }
+    }
 
     (stacks, commands)
 }
@@ -122,12 +130,12 @@ mod tests {
     #[test]
     fn day0_part1_output() {
         let input = parse_input(get_input());
-        assert_eq!(744475, part1(&input));
+        assert_eq!("FJSRQCFTN", part1(&input));
     }
 
     #[test]
     fn day0_part2_output() {
         let input = parse_input(get_input());
-        assert_eq!(70276940, part2(&input));
+        assert_eq!("CJVLJQPHS", part2(&input));
     }
 }
