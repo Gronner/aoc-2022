@@ -1,4 +1,5 @@
-use std::collections::{HashSet, HashMap};
+use std::collections::HashMap;
+use itertools::Itertools;
 
 use aoc_downloader::download_day;
 
@@ -27,15 +28,9 @@ pub fn run_day() {
 }
 
 fn marker_start(size: usize, input: &Vec<Input>) -> u32 {
-    let mut processed = size;
-    for block in input.windows(size) {
-        let set: HashSet<char> = HashSet::from_iter(block.iter().cloned());
-        if set.len() == size {
-            break;
-        }
-        processed += 1;
-    }
-    processed as u32
+    input.windows(size)
+        .take_while(|window| (*window).iter().unique().count() != size)
+        .count() as u32 + size as u32
 }
 
 // Worse, more complicated but I was challenged to do it without sets!
