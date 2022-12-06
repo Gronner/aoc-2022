@@ -67,7 +67,6 @@ impl FromStr for ElfPair {
 }
 
 fn parse_input(input: Vec<String>) -> Vec<ElfPair> {
-    let re = regex!(r"(\d+)-(\d+),(\d+)-(\d+)");
     input
         .iter()
         .map(|elfpair| ElfPair::from_str(elfpair).unwrap())
