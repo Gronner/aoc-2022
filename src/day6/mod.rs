@@ -26,28 +26,24 @@ pub fn run_day() {
     println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
 }
 
-fn part1(input: &Vec<Input>) -> u32 {
-    let mut processed = 4;
-    for block in input.windows(4) {
+fn marker_start(size: usize, input: &Vec<Input>) -> u32 {
+    let mut processed = size;
+    for block in input.windows(size) {
         let set: HashSet<char> = HashSet::from_iter(block.iter().cloned());
-        if set.len() == 4 {
+        if set.len() == size {
             break;
         }
         processed += 1;
     }
-    processed
+    processed as u32
+}
+
+fn part1(input: &Vec<Input>) -> u32 {
+    marker_start(4, input)
 }
 
 fn part2(input: &Vec<Input>) -> u32 {
-    let mut processed = 14;
-    for block in input.windows(14) {
-        let set: HashSet<char> = HashSet::from_iter(block.iter().cloned());
-        if set.len() == 14 {
-            break;
-        }
-        processed += 1;
-    }
-    processed
+    marker_start(14, input)
 }
 
 #[cfg(test)]
@@ -57,12 +53,12 @@ mod tests {
     #[test]
     fn day0_part1_output() {
         let input = parse_input(get_input());
-        assert_eq!(744475, part1(&input));
+        assert_eq!(1987, part1(&input));
     }
 
     #[test]
     fn day0_part2_output() {
         let input = parse_input(get_input());
-        assert_eq!(70276940, part2(&input));
+        assert_eq!(3059, part2(&input));
     }
 }
