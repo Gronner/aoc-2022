@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 
 use aoc_downloader::download_day;
 
@@ -36,6 +36,39 @@ fn marker_start(size: usize, input: &Vec<Input>) -> u32 {
         processed += 1;
     }
     processed as u32
+}
+
+// Worse, more complicated but I was challenged to do it without sets!
+#[allow(dead_code)]
+fn alt_marker(size: usize, input: &Vec<Input>) -> u32 {
+    let mut state = HashMap::new();
+    for i in 0..size {
+        state.entry(input[i])
+            .and_modify(|val| { *val += 1})
+            .or_insert(1);
+    }
+    if state.iter()
+        .filter(|(_, count)| **count == 1)
+        .count() == size {
+            return size as u32
+    }
+    for i in size..input.len() {
+        let backmost_char = input[i - size];
+        state.entry(backmost_char)
+            .and_modify(|val| { *val -= 1});
+        if *state.get(&backmost_char).unwrap() == 0 {
+            state.remove(&backmost_char).unwrap();
+        }
+        state.entry(input[i])
+            .and_modify(|val| { *val += 1})
+            .or_insert(1);
+        if state.iter()
+            .filter(|(_, count)| **count == 1)
+            .count() == size {
+            return i as u32 + 1;
+        }
+    }
+    0
 }
 
 fn part1(input: &Vec<Input>) -> u32 {
