@@ -11,7 +11,10 @@ fn get_input() -> Vec<String> {
     reader.lines().collect::<Result<_, _>>().unwrap()
 }
 
-fn parse_input(input: Vec<String>) -> Vec<u32> {
+type Input = u32;
+type Output = u32;
+
+fn parse_input(input: Vec<String>) -> Vec<Input> {
     input
         .iter()
         .map(|v| v.parse::<u32>().unwrap())
@@ -24,7 +27,7 @@ pub fn run_day() {
     println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
 }
 
-fn part1(input: &Vec<u32>) -> u32 {
+fn part1(input: &[Input]) -> Output {
     for val1 in input {
         for val2 in input {
             if 2020 == (val1 + val2) {
@@ -35,7 +38,7 @@ fn part1(input: &Vec<u32>) -> u32 {
     0
 }
 
-fn part2(input: &Vec<u32>) -> u32 {
+fn part2(input: &[Input]) -> Output {
     for val1 in input {
         for val2 in input {
             for val3 in input {
