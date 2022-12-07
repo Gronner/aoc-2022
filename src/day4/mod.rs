@@ -20,13 +20,13 @@ struct Section {
 
 impl Section {
     pub fn contained(&self, other: &Self) -> bool {
-        self.start <= other.start && self.end >= other.end ||
-            other.start <= self.start && other.end >= self.end 
+        self.start <= other.start && self.end >= other.end
+            || other.start <= self.start && other.end >= self.end
     }
 
     pub fn not_overlapping(&self, other: &Self) -> bool {
-        self.end < other.start && self.end < other.end ||
-            other.end < self.start && other.end < self.end
+        self.end < other.start && self.end < other.end
+            || other.end < self.start && other.end < self.end
     }
 }
 
@@ -50,19 +50,22 @@ impl FromStr for ElfPair {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let re = regex!(r"(\d+)-(\d+),(\d+)-(\d+)");
-        
-        Ok(re.captures(s).and_then(|captured| {
-            Some(ElfPair {
-                first: Section {
-                    start: captured[1].parse::<u32>().ok()?,
-                    end: captured[2].parse::<u32>().ok()?,
-                },
-                second: Section {
-                    start: captured[3].parse::<u32>().ok()?,
-                    end: captured[4].parse::<u32>().ok()?,
-                },
+
+        Ok(re
+            .captures(s)
+            .and_then(|captured| {
+                Some(ElfPair {
+                    first: Section {
+                        start: captured[1].parse::<u32>().ok()?,
+                        end: captured[2].parse::<u32>().ok()?,
+                    },
+                    second: Section {
+                        start: captured[3].parse::<u32>().ok()?,
+                        end: captured[4].parse::<u32>().ok()?,
+                    },
+                })
             })
-        }).unwrap())
+            .unwrap())
     }
 }
 
@@ -76,20 +79,21 @@ fn parse_input(input: Vec<String>) -> Vec<ElfPair> {
 pub fn run_day() {
     let input = get_input();
     let input = parse_input(input);
-    println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
+    println!(
+        "Running day {}:\n\tPart1 {}\n\tPart2 {}",
+        DAY,
+        part1(&input),
+        part2(&input)
+    );
 }
 
 fn part1(input: &[ElfPair]) -> u32 {
-    input.iter()
-        .filter(|ep| ep.one_bored())
-        .count() as u32
+    input.iter().filter(|ep| ep.one_bored()).count() as u32
 }
 
 fn part2(input: &Vec<ElfPair>) -> u32 {
     let all_pairs = input.len() as u32;
-    all_pairs - input.iter()
-        .filter(|ep| ep.full_work())
-        .count() as u32
+    all_pairs - input.iter().filter(|ep| ep.full_work()).count() as u32
 }
 
 #[cfg(test)]

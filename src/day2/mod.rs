@@ -14,16 +14,19 @@ fn get_input() -> Vec<String> {
 fn parse_input(input: Vec<String>) -> Vec<Vec<char>> {
     input
         .iter()
-        .map(|v| {
-            v.chars().collect::<Vec<char>>()
-        })
+        .map(|v| v.chars().collect::<Vec<char>>())
         .collect::<Vec<_>>()
 }
 
 pub fn run_day() {
     let input = get_input();
     let input = parse_input(input);
-    println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
+    println!(
+        "Running day {}:\n\tPart1 {}\n\tPart2 {}",
+        DAY,
+        part1(&input),
+        part2(&input)
+    );
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -35,7 +38,7 @@ enum Play {
 
 impl From<char> for Play {
     fn from(input: char) -> Self {
-        match input { 
+        match input {
             'A' | 'X' => Self::Rock,
             'B' | 'Y' => Self::Paper,
             'C' | 'Z' => Self::Scissors,
@@ -62,11 +65,15 @@ impl PartialOrd for Play {
 
 impl std::fmt::Display for Play {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", match self {
-            Self::Rock => "Rock",
-            Self::Paper => "Paper",
-            Self::Scissors => "Scissors",
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Rock => "Rock",
+                Self::Paper => "Paper",
+                Self::Scissors => "Scissors",
+            }
+        )
     }
 }
 
@@ -93,7 +100,8 @@ impl Play {
 }
 
 fn part1(input: &[Vec<char>]) -> u32 {
-    let strategy = input.iter()
+    let strategy = input
+        .iter()
         .map(|round| (Play::from(round[0]), Play::from(round[2])))
         .collect::<Vec<_>>();
 
@@ -147,7 +155,8 @@ impl Play {
 }
 
 fn part2(input: &[Vec<char>]) -> u32 {
-    let playbook = input.iter()
+    let playbook = input
+        .iter()
         .map(|round| (Play::from(round[0]), Outcome::from(round[2])))
         .collect::<Vec<_>>();
     let mut score = 0;

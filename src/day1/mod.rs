@@ -16,7 +16,7 @@ fn parse_input(input: Vec<String>) -> Vec<u32> {
     let mut elf = 0;
     for line in input {
         if !line.is_empty() {
-            elf +=  line.parse::<u32>().unwrap();
+            elf += line.parse::<u32>().unwrap();
         } else {
             findings.push(elf);
             elf = 0;
@@ -28,7 +28,12 @@ fn parse_input(input: Vec<String>) -> Vec<u32> {
 pub fn run_day() {
     let input = get_input();
     let input = parse_input(input);
-    println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
+    println!(
+        "Running day {}:\n\tPart1 {}\n\tPart2 {}",
+        DAY,
+        part1(&input),
+        part2(&input)
+    );
 }
 
 fn part1(input: &[u32]) -> u32 {

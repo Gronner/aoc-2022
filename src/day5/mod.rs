@@ -24,13 +24,16 @@ impl FromStr for Command {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let re = regex!(r"move (\d+) from (\d+) to (\d+)");
-        Ok(re.captures(s).and_then(|captured| {
-            Some(Command {
-                amount: captured[1].parse::<usize>().ok()?,
-                source: captured[2].parse::<usize>().ok()?,
-                target: captured[3].parse::<usize>().ok()?,
+        Ok(re
+            .captures(s)
+            .and_then(|captured| {
+                Some(Command {
+                    amount: captured[1].parse::<usize>().ok()?,
+                    source: captured[2].parse::<usize>().ok()?,
+                    target: captured[3].parse::<usize>().ok()?,
+                })
             })
-        }).unwrap())
+            .unwrap())
     }
 }
 
@@ -50,7 +53,8 @@ fn parse_input(input: Vec<String>) -> (Vec<Vec<char>>, Vec<Command>) {
         }
     }
 
-    let stack_count = input[stack_line].chars()
+    let stack_count = input[stack_line]
+        .chars()
         .filter(|c| !c.is_whitespace())
         .last()
         .map(|value| value.to_digit(10).unwrap() as usize)
@@ -62,7 +66,9 @@ fn parse_input(input: Vec<String>) -> (Vec<Vec<char>>, Vec<Command>) {
     for line in input[0..stack_line].iter().rev() {
         for (stack_id, stack) in stacks.iter_mut().enumerate().take(stack_count) {
             if let Some(chest) = line.chars().nth(OFFSET + stack_id * 4) {
-                if chest == ' ' { continue; }
+                if chest == ' ' {
+                    continue;
+                }
                 stack.push(chest);
             }
         }
@@ -74,7 +80,12 @@ fn parse_input(input: Vec<String>) -> (Vec<Vec<char>>, Vec<Command>) {
 pub fn run_day() {
     let input = get_input();
     let input = parse_input(input);
-    println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
+    println!(
+        "Running day {}:\n\tPart1 {}\n\tPart2 {}",
+        DAY,
+        part1(&input),
+        part2(&input)
+    );
 }
 
 fn move_box(com: &Command, stacks: &mut [Vec<char>]) {

@@ -1,6 +1,6 @@
-use std::{str::FromStr, num::ParseIntError};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::{num::ParseIntError, str::FromStr};
 
 use aoc_downloader::download_day;
 
@@ -25,7 +25,7 @@ enum Terminal {
 
 impl FromStr for Terminal {
     type Err = ParseIntError;
-    
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let ls_re = regex!(r"\$ ls");
         let cd_re = regex!(r"\$ cd (.*)");
@@ -34,18 +34,20 @@ impl FromStr for Terminal {
 
         if ls_re.is_match(s) {
             Ok(Terminal::Ls)
-        } else if let Some(cd) = cd_re.captures(s).map(|captured| {
-            Terminal::Cd(String::from(&captured[1]))
-        }) {
+        } else if let Some(cd) = cd_re
+            .captures(s)
+            .map(|captured| Terminal::Cd(String::from(&captured[1])))
+        {
             Ok(cd)
-        } else if let Some(dir) = dir_re.captures(s).map(|captured| {
-            Terminal::Dir(String::from(&captured[1]))
-        }) {
+        } else if let Some(dir) = dir_re
+            .captures(s)
+            .map(|captured| Terminal::Dir(String::from(&captured[1])))
+        {
             Ok(dir)
         } else if let Some(file) = file_re.captures(s).map(|captured| {
             Terminal::File(
-                    String::from(&captured[2]),
-                    captured[1].parse::<u32>().unwrap(),
+                String::from(&captured[2]),
+                captured[1].parse::<u32>().unwrap(),
             )
         }) {
             Ok(file)
@@ -67,7 +69,12 @@ fn parse_input(input: Vec<String>) -> Vec<Input> {
 pub fn run_day() {
     let input = get_input();
     let input = parse_input(input);
-    println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
+    println!(
+        "Running day {}:\n\tPart1 {}\n\tPart2 {}",
+        DAY,
+        part1(&input),
+        part2(&input)
+    );
 }
 
 fn get_dir_paths(input: &Vec<Input>) -> HashMap<PathBuf, u32> {
@@ -79,16 +86,17 @@ fn get_dir_paths(input: &Vec<Input>) -> HashMap<PathBuf, u32> {
             Terminal::Cd(dir) => {
                 cur_path = cur_path.join(dir);
                 dir_sizes.entry(cur_path.clone()).or_insert(0);
-            },
+            }
             Terminal::Ls => (),
             Terminal::Dir(dir) => {
                 dir_sizes.entry(cur_path.join(dir)).or_insert(0);
-            },
+            }
             Terminal::File(_, size) => {
-                dir_sizes.entry(cur_path.clone())
+                dir_sizes
+                    .entry(cur_path.clone())
                     .and_modify(|dsize| *dsize += size)
                     .or_insert(*size);
-            },
+            }
         }
     }
     dir_sizes
@@ -114,9 +122,7 @@ fn part1(input: &Vec<Input>) -> u32 {
     let dir_sizes = get_dir_paths(input);
     let dir_sizes = size_dirs(dir_sizes);
 
-    dir_sizes.values()
-        .filter(|size| **size <= 100_000)
-        .sum()
+    dir_sizes.values().filter(|size| **size <= 100_000).sum()
 }
 
 fn part2(input: &Vec<Input>) -> u32 {
@@ -129,7 +135,8 @@ fn part2(input: &Vec<Input>) -> u32 {
     let total_size = dir_sizes.get(&PathBuf::from("/")).unwrap().to_owned();
     let unused = AVAILABLE - total_size;
 
-    *dir_sizes.values()
+    *dir_sizes
+        .values()
         .filter(|size| (unused + **size) >= REQUIRED)
         .min()
         .unwrap()

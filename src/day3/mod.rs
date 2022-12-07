@@ -23,7 +23,12 @@ fn parse_input(input: Vec<String>) -> Vec<Vec<char>> {
 pub fn run_day() {
     let input = get_input();
     let input = parse_input(input);
-    println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
+    println!(
+        "Running day {}:\n\tPart1 {}\n\tPart2 {}",
+        DAY,
+        part1(&input),
+        part2(&input)
+    );
 }
 
 fn score_item(item: char) -> u32 {
@@ -38,10 +43,11 @@ fn part1(input: &Vec<Vec<char>>) -> u32 {
     let mut priority = 0;
     for backpack in input {
         let bagsize = backpack.len();
-        let left_compartment: HashSet<&char> = HashSet::from_iter(&backpack[..bagsize/2]);
-        let right_compartment = HashSet::from_iter(&backpack[bagsize/2..]);
+        let left_compartment: HashSet<&char> = HashSet::from_iter(&backpack[..bagsize / 2]);
+        let right_compartment = HashSet::from_iter(&backpack[bagsize / 2..]);
         let in_common = left_compartment.intersection(&right_compartment);
-        priority += in_common.into_iter()
+        priority += in_common
+            .into_iter()
             .map(|&&item| score_item(item))
             .sum::<u32>();
     }
@@ -56,7 +62,8 @@ fn part2(input: &[Vec<char>]) -> u32 {
         let elf3 = HashSet::from_iter(&backpack[2]);
         let in_common = elf1.intersection(&elf2).cloned().collect::<HashSet<_>>();
         let in_common = in_common.intersection(&elf3);
-        priority += in_common.into_iter()
+        priority += in_common
+            .into_iter()
             .map(|&&item| score_item(item))
             .sum::<u32>();
     }
