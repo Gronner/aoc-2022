@@ -92,7 +92,7 @@ impl Play {
     }
 }
 
-fn part1(input: &Vec<Vec<char>>) -> u32 {
+fn part1(input: &[Vec<char>]) -> u32 {
     let strategy = input.iter()
         .map(|round| (Play::from(round[0]), Play::from(round[2])))
         .collect::<Vec<_>>();
@@ -146,7 +146,7 @@ impl Play {
     }
 }
 
-fn part2(input: &Vec<Vec<char>>) -> u32 {
+fn part2(input: &[Vec<char>]) -> u32 {
     let playbook = input.iter()
         .map(|round| (Play::from(round[0]), Outcome::from(round[2])))
         .collect::<Vec<_>>();

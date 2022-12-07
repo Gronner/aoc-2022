@@ -40,13 +40,13 @@ fn parse_input(input: Vec<String>) -> (Vec<Vec<char>>, Vec<Command>) {
     let mut stack_line = 0;
     for (idx, line) in input.iter().enumerate() {
         if switch {
-            if line == "" {
+            if line.is_empty() {
                 stack_line = idx - 1;
                 switch = false;
                 continue;
             }
         } else {
-            commands.push(Command::from_str(&line).unwrap());
+            commands.push(Command::from_str(line).unwrap());
         }
     }
 
@@ -60,10 +60,10 @@ fn parse_input(input: Vec<String>) -> (Vec<Vec<char>>, Vec<Command>) {
     const OFFSET: usize = 1;
 
     for line in input[0..stack_line].iter().rev() {
-        for stack_id in 0..stack_count {
+        for (stack_id, stack) in stacks.iter_mut().enumerate().take(stack_count) {
             if let Some(chest) = line.chars().nth(OFFSET + stack_id * 4) {
                 if chest == ' ' { continue; }
-                stacks[stack_id].push(chest);
+                stack.push(chest);
             }
         }
     }
@@ -77,7 +77,7 @@ pub fn run_day() {
     println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
 }
 
-fn move_box(com: &Command, stacks: &mut Vec<Vec<char>>) {
+fn move_box(com: &Command, stacks: &mut [Vec<char>]) {
     for _ in 0..com.amount {
         let tmp = stacks[com.source - 1].pop().unwrap();
         stacks[com.target - 1].push(tmp);
@@ -99,7 +99,7 @@ fn part1(input: &(Vec<Vec<char>>, Vec<Command>)) -> String {
     output
 }
 
-fn move_all_boxes(com: &Command, stacks: &mut Vec<Vec<char>>) {
+fn move_all_boxes(com: &Command, stacks: &mut [Vec<char>]) {
     let mut tmp = vec![];
     for _ in 0..com.amount {
         tmp.push(stacks[com.source - 1].pop().unwrap());

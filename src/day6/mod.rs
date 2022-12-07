@@ -27,7 +27,7 @@ pub fn run_day() {
     println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
 }
 
-fn marker_start(size: usize, input: &Vec<Input>) -> u32 {
+fn marker_start(size: usize, input: &[Input]) -> u32 {
     input.windows(size)
         .take_while(|window| (*window).iter().unique().count() != size)
         .count() as u32 + size as u32
@@ -35,7 +35,7 @@ fn marker_start(size: usize, input: &Vec<Input>) -> u32 {
 
 // Worse, more complicated but I was challenged to do it without sets!
 #[allow(dead_code)]
-fn alt_marker(size: usize, input: &Vec<Input>) -> u32 {
+#[allow(clippy::all)] fn alt_marker(size: usize, input: &Vec<Input>) -> u32 {
     let mut state = HashMap::new();
     for i in 0..size {
         state.entry(input[i])
@@ -66,11 +66,11 @@ fn alt_marker(size: usize, input: &Vec<Input>) -> u32 {
     0
 }
 
-fn part1(input: &Vec<Input>) -> u32 {
+fn part1(input: &[Input]) -> u32 {
     marker_start(4, input)
 }
 
-fn part2(input: &Vec<Input>) -> u32 {
+fn part2(input: &[Input]) -> u32 {
     marker_start(14, input)
 }
 

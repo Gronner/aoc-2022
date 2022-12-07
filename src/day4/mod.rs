@@ -79,7 +79,7 @@ pub fn run_day() {
     println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
 }
 
-fn part1(input: &Vec<ElfPair>) -> u32 {
+fn part1(input: &[ElfPair]) -> u32 {
     input.iter()
         .filter(|ep| ep.one_bored())
         .count() as u32

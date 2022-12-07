@@ -15,7 +15,7 @@ fn parse_input(input: Vec<String>) -> Vec<u32> {
     let mut findings = vec![];
     let mut elf = 0;
     for line in input {
-        if line != "" {
+        if !line.is_empty() {
             elf +=  line.parse::<u32>().unwrap();
         } else {
             findings.push(elf);
@@ -31,12 +31,12 @@ pub fn run_day() {
     println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
 }
 
-fn part1(input: &Vec<u32>) -> u32 {
+fn part1(input: &[u32]) -> u32 {
     *input.iter().max().unwrap()
 }
 
-fn part2(input: &Vec<u32>) -> u32 {
-    let mut input = input.clone();
+fn part2(input: &[u32]) -> u32 {
+    let mut input = input.to_owned();
     input.sort_by(|a, b| a.cmp(b).reverse());
     input.iter().take(3).sum()
 }

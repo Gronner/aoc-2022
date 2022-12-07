@@ -1,4 +1,3 @@
-use aoc_2022;
 use std::env;
 
 fn main() {

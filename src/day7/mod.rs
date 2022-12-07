@@ -33,22 +33,22 @@ impl FromStr for Terminal {
         let file_re = regex!(r"(\d+) ([\w.]+)");
 
         if ls_re.is_match(s) {
-            return Ok(Terminal::Ls);
-        } else if let Some(cd) = cd_re.captures(s).and_then(|captured| {
-            Some(Terminal::Cd(String::from(&captured[1])))
+            Ok(Terminal::Ls)
+        } else if let Some(cd) = cd_re.captures(s).map(|captured| {
+            Terminal::Cd(String::from(&captured[1]))
         }) {
-            return Ok(cd);
-        } else if let Some(dir) = dir_re.captures(s).and_then(|captured| {
-            Some(Terminal::Dir(String::from(&captured[1])))
+            Ok(cd)
+        } else if let Some(dir) = dir_re.captures(s).map(|captured| {
+            Terminal::Dir(String::from(&captured[1]))
         }) {
-            return Ok(dir);
-        } else if let Some(file) = file_re.captures(s).and_then(|captured| {
-            Some(Terminal::File(
+            Ok(dir)
+        } else if let Some(file) = file_re.captures(s).map(|captured| {
+            Terminal::File(
                     String::from(&captured[2]),
-                    captured[1].parse::<u32>().ok()?,
-            ))
+                    captured[1].parse::<u32>().unwrap(),
+            )
         }) {
-            return Ok(file);
+            Ok(file)
         } else {
             panic!();
         }
@@ -77,7 +77,7 @@ fn get_dir_paths(input: &Vec<Input>) -> HashMap<PathBuf, u32> {
         match line {
             Terminal::Cd(dir) if dir == ".." => cur_path = cur_path.parent().unwrap().to_owned(),
             Terminal::Cd(dir) => {
-                cur_path = cur_path.join(&dir);
+                cur_path = cur_path.join(dir);
                 dir_sizes.entry(cur_path.clone()).or_insert(0);
             },
             Terminal::Ls => (),

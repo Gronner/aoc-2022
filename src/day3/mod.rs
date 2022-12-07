@@ -48,7 +48,7 @@ fn part1(input: &Vec<Vec<char>>) -> u32 {
     priority
 }
 
-fn part2(input: &Vec<Vec<char>>) -> u32 {
+fn part2(input: &[Vec<char>]) -> u32 {
     let mut priority = 0;
     for backpack in input.chunks(3) {
         let elf1: HashSet<&char> = HashSet::from_iter(&backpack[0]);
