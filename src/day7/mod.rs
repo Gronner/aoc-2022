@@ -1,4 +1,4 @@
-use std::{str::FromStr, string::ParseError};
+use std::{str::FromStr, num::ParseIntError};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -24,7 +24,7 @@ enum Terminal {
 }
 
 impl FromStr for Terminal {
-    type Err = ParseError;
+    type Err = ParseIntError;
     
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let ls_re = regex!(r"\$ ls");
@@ -34,27 +34,24 @@ impl FromStr for Terminal {
 
         if ls_re.is_match(s) {
             return Ok(Terminal::Ls);
-        }
-        if let Some(cd) = cd_re.captures(s).and_then(|captured| {
+        } else if let Some(cd) = cd_re.captures(s).and_then(|captured| {
             Some(Terminal::Cd(String::from(&captured[1])))
         }) {
             return Ok(cd);
-        }
-        if let Some(dir) = dir_re.captures(s).and_then(|captured| {
+        } else if let Some(dir) = dir_re.captures(s).and_then(|captured| {
             Some(Terminal::Dir(String::from(&captured[1])))
         }) {
             return Ok(dir);
-        }
-        if let Some(file) = file_re.captures(s).and_then(|captured| {
+        } else if let Some(file) = file_re.captures(s).and_then(|captured| {
             Some(Terminal::File(
                     String::from(&captured[2]),
-                    captured[1].parse::<u32>().unwrap()
+                    captured[1].parse::<u32>().ok()?,
             ))
-
         }) {
             return Ok(file);
+        } else {
+            panic!();
         }
-        panic!();
     }
 }
 
@@ -73,80 +70,35 @@ pub fn run_day() {
     println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
 }
 
-fn part1(input: &Vec<Input>) -> u32 {
+fn get_dir_paths(input: &Vec<Input>) -> HashMap<PathBuf, u32> {
     let mut dir_sizes: HashMap<PathBuf, u32> = HashMap::new();
-    // let mut sub_dirs: HashMap<&Path, Vec<&Path>> = HashMap::new();
     let mut cur_path = PathBuf::new();
     for line in input {
         match line {
+            Terminal::Cd(dir) if dir == ".." => cur_path = cur_path.parent().unwrap().to_owned(),
             Terminal::Cd(dir) => {
-                if dir != ".." {
-                    cur_path = cur_path.join(&dir);
-                    dir_sizes.entry(cur_path.clone()).or_insert(0);
-                } else {
-                    cur_path = cur_path.parent().unwrap().to_owned();
-                }
+                cur_path = cur_path.join(&dir);
+                dir_sizes.entry(cur_path.clone()).or_insert(0);
             },
             Terminal::Ls => (),
             Terminal::Dir(dir) => {
                 dir_sizes.entry(cur_path.join(dir)).or_insert(0);
             },
-            Terminal::File(file, size) => {
+            Terminal::File(_, size) => {
                 dir_sizes.entry(cur_path.clone())
                     .and_modify(|dsize| *dsize += size)
                     .or_insert(*size);
             },
         }
     }
-    let mut total_size = 0;
-    for dir in &dir_sizes {
-        println!("{:?}", dir);
-        let mut dir_size = *dir.1;
-        for other_dir in &dir_sizes {
-            if other_dir == dir {
-                continue;
-            }
-            if other_dir.0.as_path().starts_with(dir.0.as_path()) {
-                dir_size += other_dir.1;
-            }
-        }
-        println!("{:?}", dir_size);
-        if dir_size <= 100_000 {
-            total_size += dir_size;
-        }
-    }
-    total_size
+    dir_sizes
 }
 
-fn part2(input: &Vec<Input>) -> u32 {
-    let mut dir_sizes: HashMap<PathBuf, u32> = HashMap::new();
-    // let mut sub_dirs: HashMap<&Path, Vec<&Path>> = HashMap::new();
-    let mut cur_path = PathBuf::new();
-    for line in input {
-        match line {
-            Terminal::Cd(dir) => {
-                if dir != ".." {
-                    cur_path = cur_path.join(&dir);
-                    dir_sizes.entry(cur_path.clone()).or_insert(0);
-                } else {
-                    cur_path = cur_path.parent().unwrap().to_owned();
-                }
-            },
-            Terminal::Ls => (),
-            Terminal::Dir(dir) => {
-                dir_sizes.entry(cur_path.join(dir)).or_insert(0);
-            },
-            Terminal::File(file, size) => {
-                dir_sizes.entry(cur_path.clone())
-                    .and_modify(|dsize| *dsize += size)
-                    .or_insert(*size);
-            },
-        }
-    }
-
-    let tmp_dir_sizes = dir_sizes.clone();
-    for dir in &mut dir_sizes {
-        for other_dir in &tmp_dir_sizes {
+fn size_dirs(dirs: HashMap<PathBuf, u32>) -> HashMap<PathBuf, u32> {
+    let mut dirs = dirs;
+    let fix_dir = dirs.clone();
+    for dir in &mut dirs {
+        for other_dir in &fix_dir {
             if other_dir.0 == dir.0 {
                 continue;
             }
@@ -155,20 +107,32 @@ fn part2(input: &Vec<Input>) -> u32 {
             }
         }
     }
+    dirs
+}
+
+fn part1(input: &Vec<Input>) -> u32 {
+    let dir_sizes = get_dir_paths(input);
+    let dir_sizes = size_dirs(dir_sizes);
+
+    dir_sizes.values()
+        .filter(|size| **size <= 100_000)
+        .sum()
+}
+
+fn part2(input: &Vec<Input>) -> u32 {
+    const AVAILABLE: u32 = 70_000_000;
+    const REQUIRED: u32 = 30_000_000;
+
+    let dir_sizes = get_dir_paths(input);
+    let dir_sizes = size_dirs(dir_sizes);
 
     let total_size = dir_sizes.get(&PathBuf::from("/")).unwrap().to_owned();
-    let unused = 70_000_000 - total_size;
+    let unused = AVAILABLE - total_size;
 
-    let mut minimal_size = u32::MAX;
-    for dir in dir_sizes {
-        if (unused + dir.1) >= 30_000_000 {
-            if minimal_size >= dir.1 {
-                minimal_size = dir.1;
-            }            
-        }
-    }
-
-    minimal_size
+    *dir_sizes.values()
+        .filter(|size| (unused + **size) >= REQUIRED)
+        .min()
+        .unwrap()
 }
 
 #[cfg(test)]
@@ -178,12 +142,12 @@ mod tests {
     #[test]
     fn day0_part1_output() {
         let input = parse_input(get_input());
-        assert_eq!(744475, part1(&input));
+        assert_eq!(1844187, part1(&input));
     }
 
     #[test]
     fn day0_part2_output() {
         let input = parse_input(get_input());
-        assert_eq!(70276940, part2(&input));
+        assert_eq!(4978279, part2(&input));
     }
 }
