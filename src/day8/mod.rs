@@ -62,18 +62,18 @@ fn part1(input: &[Input]) -> Output {
 
     for tree_column_ns in 0..input[0].len() {
         let mut max_tree = -1;
-        for tree in 0..input.len() {
-            if input[tree][tree_column_ns] > max_tree {
-                max_tree = input[tree][tree_column_ns];
-                if !already_seen.contains(&(tree, tree_column_ns)) {
+        for (r, row) in input.iter().enumerate() {
+            if row[tree_column_ns] > max_tree {
+                max_tree = row[tree_column_ns];
+                if !already_seen.contains(&(r, tree_column_ns)) {
                     visible_trees += 1;
-                    already_seen.insert((tree, tree_column_ns));
+                    already_seen.insert((r, tree_column_ns));
                 }
             }
         }
     }
 
-    for tree_column_sn in (0..input[0].len()) {
+    for tree_column_sn in 0..input[0].len() {
         let mut max_tree = -1;
         for tree in (0..input.len()).rev() {
             if input[tree][tree_column_sn] > max_tree {
@@ -91,44 +91,38 @@ fn part1(input: &[Input]) -> Output {
 
 fn part2(input: &[Input]) -> Output {
     let mut visibility =  HashMap::new();
-    let max_r = input.len();
-    //let max_c = input[0].len();
 
     for (r, row) in input.iter().enumerate() {
         for (c, tree) in row.iter().enumerate() {
             // Left
             let mut left_vis = 0;
-            for other_tree in row[0..c].iter().rev() {
+            for other_tree in row.iter().take(c).rev() {
                 left_vis += 1;
-                if other_tree < tree {
-                } else {
+                if !(other_tree < tree) {
                     break;
                 }
             }
             // Right
             let mut righ_vis = 0;
-            for other_tree in row[c+1..].iter() {
+            for other_tree in row.iter().skip(c+1) {
                 righ_vis += 1;
-                if other_tree < tree {
-                } else {
+                if !(other_tree < tree) {
                     break;
                 }
             }
             // Up
             let mut top_vis = 0;
-            for other_tree_r in (0..r).rev() {
+            for other_tree_row in input.iter().take(r).rev() {
                 top_vis += 1;
-                if input[other_tree_r][c] < *tree {
-                } else {
+                if !(other_tree_row[c] < *tree) {
                     break;
                 }
             }
             // Down
             let mut bot_vis = 0;
-            for other_tree_r in r+1..max_r {
+            for other_tree_row in input.iter().skip(r+1) {
                 bot_vis += 1;
-                if input[other_tree_r][c] < *tree {
-                } else {
+                if !(other_tree_row[c] < *tree) {
                     break;
                 }
             }
@@ -149,12 +143,12 @@ mod tests {
     #[test]
     fn day0_part1_output() {
         let input = parse_input(get_input());
-        assert_eq!(744475, part1(&input));
+        assert_eq!(1717, part1(&input));
     }
 
     #[test]
     fn day0_part2_output() {
         let input = parse_input(get_input());
-        assert_eq!(70276940, part2(&input));
+        assert_eq!(321975, part2(&input));
     }
 }
