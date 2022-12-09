@@ -42,6 +42,17 @@ impl FromStr for Command {
     }
 }
 
+impl Command {
+    pub fn get_inner(&self) -> usize {
+        match self {
+            Command::Right(inner) => *inner,
+            Command::Left(inner) => *inner,
+            Command::Down(inner) => *inner,
+            Command::Up(inner) => *inner,
+        }
+    }
+}
+
 fn parse_input(input: Vec<String>) -> Vec<Input> {
     input
         .iter()
@@ -55,6 +66,27 @@ pub fn run_day() {
     println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
 }
 
+fn add(lhs: isize, rhs: isize) -> isize {
+    lhs + rhs
+}
+
+fn sub(lhs: isize, rhs: isize) -> isize {
+    lhs - rhs
+}
+
+fn mul(lhs: isize, rhs: isize) -> isize {
+    lhs * rhs
+}
+
+fn pull_rope(rope: &mut Vec<(isize, isize)>, direction: (fn(isize, isize) -> isize, fn(isize, isize) -> isize)) {
+    rope[0] = (direction.0(rope[0].0, 1), direction.1(rope[0].1, 1));
+    for i in 1..rope.len(){
+        if let Some(new_rope_pos) = update_tail(&rope[i-1], &rope[i]) {
+            rope[i] = new_rope_pos;
+        }
+    }
+}
+
 fn update_tail(head: &(isize, isize), tail: &(isize, isize)) -> Option<(isize, isize)> {
     match (head.0 - tail.0, head.1 - tail.1) {
         (0, 0) | (1,0) | (-1,0) | (1, 1) | (1, -1) | (-1, 1) | (-1, -1) | (0, 1) | (0, -1) => {
@@ -66,108 +98,32 @@ fn update_tail(head: &(isize, isize), tail: &(isize, isize)) -> Option<(isize, i
     }
 }
 
-fn part1(input: &[Input]) -> Output {
+fn follow_n_rope(input: &[Input], length: usize) -> usize {
     let mut visited = HashSet::new();
-    let mut current_head: (isize, isize) = (0, 0);
-    let mut current_tail: (isize, isize) = (0, 0);
-    visited.insert(current_tail);
+    let mut rope: Vec<(isize, isize)> = vec![(0, 0); length];
+    visited.insert(rope[length - 1]);
     for command in input {
-       match command {
-            Command::Right(s) => {
-                for _ in 0..*s {
-                    current_head = (current_head.0 + 1, current_head.1);
-                    if let Some(new_tail) = update_tail(&current_head, &current_tail) {
-                        visited.insert(new_tail);
-                        current_tail = new_tail;
-                    }
-                }
-            },
-            Command::Left(s) => {
-                for _ in 0..*s {
-                    current_head = (current_head.0 - 1, current_head.1);
-                    if let Some(new_tail) = update_tail(&current_head, &current_tail) {
-                        visited.insert(new_tail);
-                        current_tail = new_tail;
-                    }
-                }
-            },
-            Command::Down(s) => {
-                for _ in 0..*s {
-                    current_head = (current_head.0, current_head.1 - 1);
-                    if let Some(new_tail) = update_tail(&current_head, &current_tail) {
-                        visited.insert(new_tail);
-                        current_tail = new_tail;
-                    }
-                }
-            },
-            Command::Up(s) => {
-                for _ in 0..*s {
-                    current_head = (current_head.0, current_head.1 + 1);
-                    if let Some(new_tail) = update_tail(&current_head, &current_tail) {
-                        visited.insert(new_tail);
-                        current_tail = new_tail;
-                    }
-                }
-            },
-       }
+        let ops: (fn(isize, isize) -> isize, fn(isize, isize) -> isize)  = match command {
+            Command::Right(_) => (add, mul),
+            Command::Left(_) => (sub, mul),
+            Command::Down(_) => (mul, sub),
+            Command::Up(_) => (mul, add),
+        };
+        let step = command.get_inner();
+        for _ in 0..step {
+            pull_rope(&mut rope, ops);
+            visited.insert(rope[length - 1]);
+        }
     }
     visited.len()
 }
 
+fn part1(input: &[Input]) -> Output {
+    follow_n_rope(input, 2)
+}
+
 fn part2(input: &[Input]) -> Output {
-    const ROPE_LENGTH: usize = 10;
-    let mut visited = HashSet::new();
-    let mut rope: Vec<(isize, isize)> = vec![(0, 0); ROPE_LENGTH];
-    visited.insert(rope[ROPE_LENGTH - 1]);
-    for command in input {
-       match command {
-            Command::Right(s) => {
-                for _ in 0..*s {
-                    rope[0] = (rope[0].0 + 1, rope[0].1);
-                    for i in 1..ROPE_LENGTH {
-                        if let Some(new_rope_pos) = update_tail(&rope[i-1], &rope[i]) {
-                            rope[i] = new_rope_pos;
-                        }
-                    }
-                    visited.insert(rope[9]);
-                }
-            },
-            Command::Left(s) => {
-                for _ in 0..*s {
-                    rope[0] = (rope[0].0 - 1, rope[0].1);
-                    for i in 1..ROPE_LENGTH {
-                        if let Some(new_rope_pos) = update_tail(&rope[i-1], &rope[i]) {
-                            rope[i] = new_rope_pos;
-                        }
-                    }
-                    visited.insert(rope[9]);
-                }
-            },
-            Command::Down(s) => {
-                for _ in 0..*s {
-                    rope[0] = (rope[0].0, rope[0].1 - 1);
-                    for i in 1..ROPE_LENGTH {
-                        if let Some(new_rope_pos) = update_tail(&rope[i-1], &rope[i]) {
-                            rope[i] = new_rope_pos;
-                        }
-                    }
-                    visited.insert(rope[9]);
-                }
-            },
-            Command::Up(s) => {
-                for _ in 0..*s {
-                    rope[0] = (rope[0].0, rope[0].1 + 1);
-                    for i in 1..ROPE_LENGTH {
-                        if let Some(new_rope_pos) = update_tail(&rope[i-1], &rope[i]) {
-                            rope[i] = new_rope_pos;
-                        }
-                    }
-                    visited.insert(rope[9]);
-                }
-            },
-       }
-    }
-    visited.len()
+    follow_n_rope(input, 10)
 }
 
 #[cfg(test)]
@@ -177,12 +133,12 @@ mod tests {
     #[test]
     fn day0_part1_output() {
         let input = parse_input(get_input());
-        assert_eq!(744475, part1(&input));
+        assert_eq!(6314, part1(&input));
     }
 
     #[test]
     fn day0_part2_output() {
         let input = parse_input(get_input());
-        assert_eq!(70276940, part2(&input));
+        assert_eq!(2504, part2(&input));
     }
 }
