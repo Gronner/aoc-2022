@@ -1,4 +1,4 @@
-use std::{str::FromStr, num::ParseIntError, collections::HashSet};
+use std::{str::FromStr, num::ParseIntError, collections::{HashMap, HashSet}};
 
 use aoc_downloader::download_day;
 
@@ -6,9 +6,9 @@ const DAY: u32 = 9;
 
 fn get_input() -> Vec<String> {
     use std::io::BufRead;
-    download_day(DAY, "input").unwrap();
+    download_day((DAY) as u32, "input").unwrap();
 
-    let file = std::fs::File::open(format!("input/input{DAY}.txt")).unwrap();
+    let file = std::fs::File::open(format!("input/input{}.txt", DAY)).unwrap();
     let reader = std::io::BufReader::new(&file);
     reader.lines().collect::<Result<_, _>>().unwrap()
 }
@@ -36,7 +36,7 @@ impl FromStr for Command {
                 "L" => Command::Left(step),
                 "D" => Command::Down(step),
                 "U" => Command::Up(step),
-                e => panic!("Unkown input: {e}"),
+                e => panic!("Unkown input: {}", e),
             }
         }).unwrap())
     }
@@ -66,8 +66,6 @@ pub fn run_day() {
     println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
 }
 
-type OpsIsize = fn(isize, isize) -> isize;
-
 fn add(lhs: isize, rhs: isize) -> isize {
     lhs + rhs
 }
@@ -80,7 +78,7 @@ fn mul(lhs: isize, rhs: isize) -> isize {
     lhs * rhs
 }
 
-fn pull_rope(rope: &mut Vec<(isize, isize)>, direction: (OpsIsize, OpsIsize)) {
+fn pull_rope(rope: &mut Vec<(isize, isize)>, direction: (fn(isize, isize) -> isize, fn(isize, isize) -> isize)) {
     rope[0] = (direction.0(rope[0].0, 1), direction.1(rope[0].1, 1));
     for i in 1..rope.len(){
         if let Some(new_rope_pos) = update_tail(&rope[i-1], &rope[i]) {
@@ -105,7 +103,7 @@ fn follow_n_rope(input: &[Input], length: usize) -> usize {
     let mut rope: Vec<(isize, isize)> = vec![(0, 0); length];
     visited.insert(rope[length - 1]);
     for command in input {
-        let ops: (OpsIsize, OpsIsize)  = match command {
+        let ops: (fn(isize, isize) -> isize, fn(isize, isize) -> isize)  = match command {
             Command::Right(_) => (add, mul),
             Command::Left(_) => (sub, mul),
             Command::Down(_) => (mul, sub),

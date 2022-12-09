@@ -6,9 +6,9 @@ const DAY: u32 = 8;
 
 fn get_input() -> Vec<String> {
     use std::io::BufRead;
-    download_day((DAY) as u32, "input").unwrap();
+    download_day(DAY, "input").unwrap();
 
-    let file = std::fs::File::open(format!("input/input{}.txt", DAY)).unwrap();
+    let file = std::fs::File::open(format!("input/input{DAY}.txt")).unwrap();
     let reader = std::io::BufReader::new(&file);
     reader.lines().collect::<Result<_, _>>().unwrap()
 }
@@ -98,7 +98,7 @@ fn part2(input: &[Input]) -> Output {
             let mut left_vis = 0;
             for other_tree in row.iter().take(c).rev() {
                 left_vis += 1;
-                if !(other_tree < tree) {
+                if other_tree >= tree {
                     break;
                 }
             }
@@ -106,7 +106,7 @@ fn part2(input: &[Input]) -> Output {
             let mut righ_vis = 0;
             for other_tree in row.iter().skip(c+1) {
                 righ_vis += 1;
-                if !(other_tree < tree) {
+                if other_tree >= tree {
                     break;
                 }
             }
@@ -114,7 +114,7 @@ fn part2(input: &[Input]) -> Output {
             let mut top_vis = 0;
             for other_tree_row in input.iter().take(r).rev() {
                 top_vis += 1;
-                if !(other_tree_row[c] < *tree) {
+                if other_tree_row[c] >= *tree {
                     break;
                 }
             }
@@ -122,7 +122,7 @@ fn part2(input: &[Input]) -> Output {
             let mut bot_vis = 0;
             for other_tree_row in input.iter().skip(r+1) {
                 bot_vis += 1;
-                if !(other_tree_row[c] < *tree) {
+                if other_tree_row[c] >= *tree {
                     break;
                 }
             }

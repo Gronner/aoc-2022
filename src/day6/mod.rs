@@ -9,9 +9,9 @@ type Input = char;
 
 fn get_input() -> Vec<String> {
     use std::io::BufRead;
-    download_day((DAY) as u32, "input").unwrap();
+    download_day(DAY, "input").unwrap();
 
-    let file = std::fs::File::open(format!("input/input{}.txt", DAY)).unwrap();
+    let file = std::fs::File::open(format!("input/input{DAY}.txt")).unwrap();
     let reader = std::io::BufReader::new(&file);
     reader.lines().collect::<Result<_, _>>().unwrap()
 }
