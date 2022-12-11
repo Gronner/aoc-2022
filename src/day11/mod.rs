@@ -11,11 +11,29 @@ fn get_input() -> Vec<String> {
     reader.lines().collect::<Result<_, _>>().unwrap()
 }
 
-type Input = u32;
+type Input = Monkey;
 type Output = u64;
 
 fn parse_input(_input: Vec<String>) -> Vec<Input> {
-    vec![0]
+    let common = 7 * 19 * 5 * 11 * 17 * 13 * 2 * 3;
+    vec![
+        Monkey::new(vec![57, 58], 7, m0, (2, 3), common),
+        Monkey::new(vec![66, 52, 59, 79, 94, 73], 19, m1, (4, 6), common),
+        Monkey::new(vec![80], 5, m2, (7, 5), common),
+        Monkey::new(vec![82, 81, 68, 66, 71, 83, 75, 97], 11, m3, (5, 2), common),
+        Monkey::new(vec![55, 52, 67, 70, 69, 94, 90], 17, m4, (0, 3), common),
+        Monkey::new(vec![69, 85, 89, 91], 13, m5, (1, 7), common),
+        Monkey::new(vec![75, 53, 73, 52, 75], 2, m6, (0, 4), common),
+        Monkey::new(vec![94, 60, 79], 3, m7, (1, 6), common),
+    ]
+    /*
+    vec![
+        Monkey::new(vec![79, 98], 23, t0, (2, 3)),
+        Monkey::new(vec![54, 65, 75, 74], 19, t1, (2, 0)),
+        Monkey::new(vec![79, 60, 97], 13, t2, (1, 3)),
+        Monkey::new(vec![74], 17, t3, (0, 1)),
+    ];
+    */
 }
 
 type Op = fn(Item) -> Item;
@@ -71,25 +89,24 @@ type Item = u64;
 type MonkeyId = usize;
 type Throw = (MonkeyId, Item);
 
+#[derive(Clone)]
 struct Monkey {
     items: Vec<Item>,
     test_val: Item,
     inspect_it: Op,
     targets: (MonkeyId, MonkeyId),
     pub inspections: u64,
-    worry: Item,
     common: Item,
 }
 
 impl Monkey {
-    pub fn new(starting_items: Vec<Item>, test_val: Item, inspect: Op, targets: (MonkeyId, MonkeyId), worry: Item, common: Item) -> Self {
+    pub fn new(starting_items: Vec<Item>, test_val: Item, inspect: Op, targets: (MonkeyId, MonkeyId), common: Item) -> Self {
         Monkey {
-            items: starting_items.clone(),
+            items: starting_items,
             test_val,
             inspect_it: inspect,
             targets,
             inspections: 0,
-            worry,
             common
         }
     }
@@ -98,23 +115,20 @@ impl Monkey {
         (self.inspect_it)(item)
     }
 
-    fn unworry(&self, item: Item) -> Item {
-        if self.worry == 3 {
-            item / self.worry
-        } else {
-            item % self.common
-        }
+    fn unworry(&self, item: Item, worry: Item) -> Item {
+        let item = item / worry;
+        item % self.common
     }
 
     fn test(&self, item: Item) -> bool {
         item % self.test_val == 0
     }
 
-    pub fn turn(&mut self) -> Vec<Throw> {
+    pub fn turn(&mut self, worry_factor: Item) -> Vec<Throw> {
         let mut throws = vec![];
         while let Some(mut item) = self.items.pop() {
             item = self.checkout(item);
-            item = self.unworry(item);
+            item = self.unworry(item, worry_factor);
             let target = if self.test(item) {
                 self.targets.0
             } else {
@@ -138,82 +152,35 @@ pub fn run_day() {
     println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
 }
 
-fn part1(_input: &[Input]) -> Output {
-    let common = 7 * 19 * 5 * 11 * 17 * 13 * 2 * 3;
-    let mut monkeys = vec![
-        Monkey::new(vec![57, 58], 7, m0, (2, 3), 3, common),
-        Monkey::new(vec![66, 52, 59, 79, 94, 73], 19, m1, (4, 6), 3, common),
-        Monkey::new(vec![80], 5, m2, (7, 5), 3, common),
-        Monkey::new(vec![82, 81, 68, 66, 71, 83, 75, 97], 11, m3, (5, 2), 3, common),
-        Monkey::new(vec![55, 52, 67, 70, 69, 94, 90], 17, m4, (0, 3), 3, common),
-        Monkey::new(vec![69, 85, 89, 91], 13, m5, (1, 7), 3, common),
-        Monkey::new(vec![75, 53, 73, 52, 75], 2, m6, (0, 4), 3, common),
-        Monkey::new(vec![94, 60, 79], 3, m7, (1, 6), 3, common),
-    ];
-    /*
-    let mut monkeys = vec![
-        Monkey::new(vec![79, 98], 23, t0, (2, 3)),
-        Monkey::new(vec![54, 65, 75, 74], 19, t1, (2, 0)),
-        Monkey::new(vec![79, 60, 97], 13, t2, (1, 3)),
-        Monkey::new(vec![74], 17, t3, (0, 1)),
-    ];
-    */
-
-    for _ in 0..20 {
-        for i in 0..monkeys.len() {
-            let air = monkeys[i].turn();
+fn follow_the_monkey(input: &[Input], round: usize, worry_factor: Item) -> Vec<Input> {
+    let mut input = input.to_owned();
+    for _ in 0..round {
+        for i in 0..input.len() {
+            let air = input[i].turn(worry_factor);
             for throw in air {
-                monkeys[throw.0].catch(throw.1);
+                input[throw.0].catch(throw.1);
             }
         }
     }
 
-    monkeys.sort_by(|a, b| a.inspections.cmp(&b.inspections));
-    let outcome = monkeys.iter()
-        .rev()
-        .take(2)
-        .map(|m| m.inspections)
-        .collect::<Vec<_>>();
-    outcome[0] * outcome[1]
+    input.sort_by(|a, b| a.inspections.cmp(&b.inspections));
+    input
 }
 
-fn part2(_input: &[Input]) -> Output {
-    let common = 7 * 19 * 5 * 11 * 17 * 13 * 2 * 3;
-    let mut monkeys = vec![
-        Monkey::new(vec![57, 58], 7, m0, (2, 3), 1, common),
-        Monkey::new(vec![66, 52, 59, 79, 94, 73], 19, m1, (4, 6), 1, common),
-        Monkey::new(vec![80], 5, m2, (7, 5), 1, common),
-        Monkey::new(vec![82, 81, 68, 66, 71, 83, 75, 97], 11, m3, (5, 2), 1, common),
-        Monkey::new(vec![55, 52, 67, 70, 69, 94, 90], 17, m4, (0, 3), 1, common),
-        Monkey::new(vec![69, 85, 89, 91], 13, m5, (1, 7), 1, common),
-        Monkey::new(vec![75, 53, 73, 52, 75], 2, m6, (0, 4), 1, common),
-        Monkey::new(vec![94, 60, 79], 3, m7, (1, 6), 1, common),
-    ];
-    /*
-    let mut monkeys = vec![
-        Monkey::new(vec![79, 98], 23, t0, (2, 3)),
-        Monkey::new(vec![54, 65, 75, 74], 19, t1, (2, 0)),
-        Monkey::new(vec![79, 60, 97], 13, t2, (1, 3)),
-        Monkey::new(vec![74], 17, t3, (0, 1)),
-    ];
-    */
-
-    for _ in 0..10_000 {
-        for i in 0..monkeys.len() {
-            let air = monkeys[i].turn();
-            for throw in air {
-                monkeys[throw.0].catch(throw.1);
-            }
-        }
-    }
-
-    monkeys.sort_by(|a, b| a.inspections.cmp(&b.inspections));
-    let outcome = monkeys.iter()
+fn score(input: &[Input]) -> Output {
+    input.iter()
         .rev()
         .take(2)
         .map(|m| m.inspections)
-        .collect::<Vec<_>>();
-    outcome[0] * outcome[1]
+        .product()
+}
+
+fn part1(input: &[Input]) -> Output {
+    score(&follow_the_monkey(input, 20, 3))
+}
+
+fn part2(input: &[Input]) -> Output {
+    score(&follow_the_monkey(input, 10_000, 1))
 }
 
 #[cfg(test)]
