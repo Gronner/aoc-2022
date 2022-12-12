@@ -27,12 +27,13 @@ fn parse_input(_input: Vec<String>) -> Vec<Input> {
         Monkey::new(vec![94, 60, 79], 3, m7, (1, 6), common),
     ]
     /*
+    let common = 23 * 19 * 13 * 17;
     vec![
-        Monkey::new(vec![79, 98], 23, t0, (2, 3)),
-        Monkey::new(vec![54, 65, 75, 74], 19, t1, (2, 0)),
-        Monkey::new(vec![79, 60, 97], 13, t2, (1, 3)),
-        Monkey::new(vec![74], 17, t3, (0, 1)),
-    ];
+        Monkey::new(vec![79, 98], 23, t0, (2, 3), common),
+        Monkey::new(vec![54, 65, 75, 74], 19, t1, (2, 0), common),
+        Monkey::new(vec![79, 60, 97], 13, t2, (1, 3), common),
+        Monkey::new(vec![74], 17, t3, (0, 1), common),
+    ]
     */
 }
 
@@ -68,6 +69,11 @@ fn m6(lhs: Item) -> Item {
 
 fn m7(lhs: Item) -> Item {
     lhs + 2
+}
+
+#[allow(dead_code)]
+fn t0(lhs: Item) -> Item {
+    lhs * 19
 }
 
 #[allow(dead_code)]
