@@ -32,7 +32,7 @@ pub fn run_day() {
 
 type Coord = (usize, usize);
 
-fn find_start_end(input: &[Input]) -> (Option<(usize, usize)>, Option<(usize, usize)>) {
+fn find_start_end(input: &[Input]) -> (Option<Coord>, Option<Coord>) {
     let mut plan = (None, None);
     'outer: for (y, row) in input.iter().enumerate() {
         for (x, grid) in row.iter().enumerate() {
