@@ -1,5 +1,4 @@
 use std::collections::{HashSet, VecDeque};
-use itertools::Itertools;
 
 use aoc_downloader::download_day;
 
@@ -49,7 +48,17 @@ fn find_start_end(input: &[Input]) -> (Option<Coord>, Option<Coord>) {
     plan
 }
 
-fn traverse_bf(input: &[Input], start: Coord, end: Coord) -> Option<u64> {
+type CheckValid = fn(char, char) -> bool;
+
+fn goes_up(from: char, to: char) -> bool {
+    from as u32 + 1 >= to as u32
+}
+
+fn goes_down(from: char, to: char) -> bool {
+    from as u32 - 1 <= to as u32
+}
+
+fn traverse_bf(input: &[Input], start: Coord, end: char, valid_check: CheckValid) -> Option<u64> {
     let mut visited = HashSet::new();
     let mut queue = VecDeque::new();
 
@@ -57,7 +66,7 @@ fn traverse_bf(input: &[Input], start: Coord, end: Coord) -> Option<u64> {
 
     loop {
         let ((x_pos, y_pos), len) = queue.pop_front()?;
-        if (x_pos, y_pos) == end {
+        if input[y_pos][x_pos] == end {
             return Some(len)
         }
         for (x_offset, y_offset) in [(0, 1), (1, 0), (0, -1), (-1, 0)] {
@@ -67,7 +76,7 @@ fn traverse_bf(input: &[Input], start: Coord, end: Coord) -> Option<u64> {
             );
             let Some(grid) = input.get(new_y).and_then(|row| row.get(new_x)) else { continue };
 
-            if (input[y_pos][x_pos] as u32 + 1) >= (*grid as u32)
+            if valid_check(input[y_pos][x_pos], *grid)
                 && !visited.contains(&(new_x, new_y)) {
                 visited.insert((new_x, new_y));
                 queue.push_back(((new_x, new_y), len + 1));
@@ -77,11 +86,10 @@ fn traverse_bf(input: &[Input], start: Coord, end: Coord) -> Option<u64> {
 }
 
 fn part1(input: &[Input]) -> Output {
-    let (start, end) = find_start_end(input);
+    let (start, _) = find_start_end(input);
     let mut input = input.to_owned();
     input[start.unwrap().1][start.unwrap().0] = 'a';
-    input[end.unwrap().1][end.unwrap().0] = 'z';
-    traverse_bf(&input, start.unwrap(), end.unwrap()).unwrap()
+    traverse_bf(&input, start.unwrap(), 'E', goes_up).unwrap()
 }
 
 fn part2(input: &[Input]) -> Output {
@@ -90,11 +98,7 @@ fn part2(input: &[Input]) -> Output {
     input[start.unwrap().1][start.unwrap().0] = 'a';
     input[end.unwrap().1][end.unwrap().0] = 'z';
 
-    (0..input.len()).cartesian_product(0..input[0].len())
-        .filter(|&(y, x)| input[y][x] == 'a')
-        .filter_map(|(y, x)| traverse_bf(&input, (x, y), end.unwrap()))
-        .min()
-        .unwrap()
+    traverse_bf(&input, end.unwrap(), 'a', goes_down).unwrap()
 }
 
 #[cfg(test)]
