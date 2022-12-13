@@ -9,9 +9,8 @@ edition = "2021"
 aoc-downloader = { git = "https://github.com/Gronner/aoc-downloader" }
 cached = "0.40.0"
 itertools = "0.10.5"
-num = "0.4.0"
+nom = "7.1.1"
 once_cell = "1.16.0"
-petgraph = "0.6.2"
 regex = "1.7.0"
 
 [profile.dev]
