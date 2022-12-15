@@ -14,7 +14,7 @@ fn get_input() -> Vec<String> {
 }
 
 type Input = Sensor;
-type Output = u32;
+type Output = u64;
 
 struct Sensor {
     pub pos: (isize, isize),
@@ -148,9 +148,12 @@ fn part2(input: &[Input]) -> Output {
             }
             if !exclusive {
                 print!("{} - {}", pos.0, pos.1);
-                return (pos.0 * 4000000 + pos.1) as u32;
+                return (pos.0 * 4000000 + pos.1) as u64;
             }
         }
+    }
+    for sensor in input {
+        assert!(!sensor.in_ex_range((3103499, 3391794)));
     }
     0
 }
