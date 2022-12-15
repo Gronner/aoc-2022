@@ -11,13 +11,13 @@ fn get_input() -> Vec<String> {
     reader.lines().collect::<Result<_, _>>().unwrap()
 }
 
-type Input = u32;
-type Output = u32;
+type Input = u64;
+type Output = u64;
 
 fn parse_input(input: Vec<String>) -> Vec<Input> {
     input
         .iter()
-        .map(|v| v.parse::<u32>().unwrap())
+        .map(|v| v.parse::<u64>().unwrap())
         .collect::<Vec<_>>()
 }
 
