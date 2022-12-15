@@ -1,3 +1,5 @@
+use std::ops::{Generator, GeneratorState};
+use std::pin::Pin;
 use std::{str::FromStr, num::ParseIntError};
 
 use aoc_downloader::download_day;
@@ -19,6 +21,7 @@ type Output = u64;
 struct Sensor {
     pub pos: (isize, isize),
     pub closest_beacon: (isize, isize),
+    pub ex_range: isize,
 }
 
 fn manhatten_distance(pos_a: (isize, isize), pos_b: (isize, isize)) -> isize {
@@ -26,33 +29,16 @@ fn manhatten_distance(pos_a: (isize, isize), pos_b: (isize, isize)) -> isize {
 }
 
 impl Sensor {
-    pub fn get_exlusive_range(&self) -> isize {
-        manhatten_distance(self.pos, self.closest_beacon)
-    }
-
     pub fn in_ex_range(&self, position: (isize, isize)) -> bool {
-        manhatten_distance(self.pos, position) <= self.get_exlusive_range()
+        manhatten_distance(self.pos, position) <= self.ex_range
     }
 
     pub fn is_beacon(&self, position: (isize, isize)) -> bool {
         self.closest_beacon == position
     }
-
-    pub fn get_outer_ring(&self) -> Vec<(isize, isize)> {
-        let mut outer_ring = Vec::new();
-        for direction_x in vec![-1, 1] {
-            for direction_y in vec![-1, 1] {
-                for delta_x in 0..=(self.get_exlusive_range() + 1) {
-                    let delta_y = self.get_exlusive_range() + 1 - delta_x;
-                    let pos_x = self.pos.0 + delta_x * direction_x;
-                    let pos_y = self.pos.1 + delta_y * direction_y;
-                    outer_ring.push((pos_x, pos_y));
-                }
-            }
-        }
-        outer_ring
-    }
 }
+
+
 
 impl FromStr for Sensor {
     type Err = ParseIntError;
@@ -60,16 +46,18 @@ impl FromStr for Sensor {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let re = regex!(r"Sensor at x=(-?\d+), y=(-?\d+): closest beacon is at x=(-?\d+), y=(-?\d+)");
 
+
         Ok(re.captures(s).map(|captured| {
+            let sensor_x = captured[1].parse::<isize>().unwrap();
+            let sensor_y = captured[2].parse::<isize>().unwrap();
+            let beacon_x = captured[3].parse::<isize>().unwrap();
+            let beacon_y = captured[4].parse::<isize>().unwrap();
+            let manhatten = manhatten_distance((sensor_x, sensor_y), (beacon_x, beacon_y));
+
             Sensor {
-                pos: (
-                         captured[1].parse::<isize>().unwrap(),
-                         captured[2].parse::<isize>().unwrap(),
-                     ),
-             closest_beacon: (
-                         captured[3].parse::<isize>().unwrap(),
-                         captured[4].parse::<isize>().unwrap(),
-             ),
+                pos: (sensor_x, sensor_y),
+                closest_beacon: (beacon_x, beacon_y),
+                ex_range: manhatten,
             }
         }).unwrap())
 
@@ -94,14 +82,14 @@ fn part1(input: &[Input]) -> Output {
     let min_x = input
         .iter()
         .map(|sensor| {
-            sensor.pos.0 - sensor.get_exlusive_range()
+            sensor.pos.0 - sensor.ex_range
         })
         .min()
         .unwrap();
     let max_x = input
         .iter()
         .map(|sensor| {
-            sensor.pos.0 + sensor.get_exlusive_range()
+            sensor.pos.0 + sensor.ex_range
         })
         .max()
         .unwrap();
@@ -132,11 +120,28 @@ fn part1(input: &[Input]) -> Output {
     empty_and_exlusive
 }
 
+fn not_in_range(pos: (isize, isize), max_range: isize) -> bool {
+    pos.0 < 0 || pos.0 > max_range || pos.1 < 0 || pos.1 > max_range 
+}
+
 fn part2(input: &[Input]) -> Output {
     let size = 4000000;
     for sensor in input {
-        for pos in sensor.get_outer_ring() {
-            if pos.0 < 0 || pos.1 < 0 || pos.0 > size || pos.1 > size {
+        let mut generator = move || {
+            for direction_x in &[-1, 1] {
+                for direction_y in &[-1, 1] {
+                    for delta_x in 0..=(sensor.ex_range + 1) {
+                        let delta_y = sensor.ex_range + 1 - delta_x;
+                        let pos_x = sensor.pos.0 + delta_x * direction_x;
+                        let pos_y = sensor.pos.1 + delta_y * direction_y;
+                        yield (pos_x, pos_y);
+                    }
+                }
+            }
+            return (-1, -1);
+        };
+        while let GeneratorState::Yielded(pos) = Pin::new(&mut generator).resume(()) {
+            if not_in_range(pos, size) {
                 continue;
             }
             let mut exclusive = false;
@@ -147,13 +152,9 @@ fn part2(input: &[Input]) -> Output {
                 }
             }
             if !exclusive {
-                print!("{} - {}", pos.0, pos.1);
                 return (pos.0 * 4000000 + pos.1) as u64;
             }
         }
-    }
-    for sensor in input {
-        assert!(!sensor.in_ex_range((3103499, 3391794)));
     }
     0
 }
@@ -171,6 +172,6 @@ mod tests {
     #[test]
     fn day0_part2_output() {
         let input = parse_input(get_input());
-        assert_eq!(70276940, part2(&input));
+        assert_eq!(12413999391794, part2(&input));
     }
 }

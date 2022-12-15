@@ -1,3 +1,4 @@
+#![feature(generators, generator_trait)]
 use std::env;
 
 fn main() {

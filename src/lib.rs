@@ -1,4 +1,5 @@
 #![feature(int_roundings)]
+#![feature(generators, generator_trait)]
 #[macro_use]
 
 mod utils;
