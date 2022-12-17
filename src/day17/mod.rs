@@ -102,12 +102,9 @@ fn create_pattern(rounds: usize, input: &[Input]) -> Vec<i128> {
     }
 
     let mut last = 0;
+    let mut max_height = 0;
     for _ in 0..rounds {
         let block = rock_gen.next().unwrap();
-        let max_height = *tetris.iter()
-            .map(|(_, y)| y)
-            .max()
-            .unwrap();
         deltas.push(max_height - last);
         last = max_height;
         let mut shape = block.get_shape(max_height);
@@ -125,7 +122,7 @@ fn create_pattern(rounds: usize, input: &[Input]) -> Vec<i128> {
 
             if shift_shape.iter().any(|(x, _)| *x < 0 || *x > 6)
                 || shift_shape.iter().any(|pos| tetris.contains(pos)) {
-                shift_shape = shape;
+                shift_shape = shape.clone();
             } 
             let drop_shape = shift_shape
                 .iter()
@@ -138,42 +135,30 @@ fn create_pattern(rounds: usize, input: &[Input]) -> Vec<i128> {
             }
             shape = drop_shape;
         }
+        max_height = std::cmp::max(max_height, *shape.iter().map(|(_, y)| y).max().unwrap());
     }
     
 
-    let max_height = *tetris.iter()
-        .map(|(_, y)| y)
-        .max()
-        .unwrap();
     deltas.push(max_height - last);
     deltas
 }
 
 fn part2(input: &[Input]) -> Output {
-    let sample = 10000;
+    let sample = 5000;
     let deltas = create_pattern(sample, input);
     let mut found_offset = None;
     let mut found_span = None;
-    'outer: for offset in 0..2500 {
-        for span in 2..(sample/2) {
+    'outer: for offset in 1426..2500{
+        for span in 1715..(sample/2) {
             let mut found = true;
             let pattern = &deltas[offset..(offset + span)];
-            let mut found_chunk = None;
             'iteration: for chunk in deltas[(offset + span)..].chunks(span) {
-                if chunk.len() != span {
+                if pattern != chunk {
                     found = false;
                     break 'iteration;
                 }
-                for i in 0..pattern.len() {
-                    if pattern[i] != chunk[i] {
-                        found = false;
-                        break 'iteration;
-                    }
-                }
-                found_chunk = Some(chunk);
             }
             if found {
-                assert_eq!(pattern.len(), found_chunk.unwrap().len());
                 found_offset = Some(offset);
                 found_span = Some(span);
                 break 'outer;
@@ -183,7 +168,7 @@ fn part2(input: &[Input]) -> Output {
 
     let offset = found_offset.unwrap();
     let span = found_span.unwrap();
-    println!("OS: {offset}, Span: {span}");
+    // println!("OS: {offset}, Span: {span}");
 
     let rounds = 1_000_000_000_000_usize;
     let missing_rounds = (rounds - offset) % span;
