@@ -1,4 +1,5 @@
 use aoc_downloader::download_day;
+use once_cell::unsync::Lazy;
 use std::collections::HashSet;
 use std::pin::Pin;
 use std::ops::{Generator, GeneratorState};
@@ -15,7 +16,7 @@ fn get_input() -> Vec<String> {
 }
 
 type Input = Jet;
-type Output = i64;
+type Output = i128;
 
 #[derive(Clone, Copy, Debug)]
 enum Jet {
@@ -33,7 +34,7 @@ enum Rock {
 }
 
 impl Rock {
-    fn get_shape(&self, max_height: i64) -> Vec<(i64, i64)> {
+    fn get_shape(&self, max_height: i128) -> Vec<(i128, i128)> {
         let shape = match self {
             // (x, y)
             Self::Minus => vec![(0, 0), (1, 0), (2, 0), (3, 0)],
@@ -62,7 +63,7 @@ pub fn run_day() {
     println!("Running day {}:\n\tPart1 {}\n\tPart2 {}", DAY, part1(&input), part2(&input));
 }
 
-fn print_tetris(tetris: &HashSet<(i64, i64)>) {
+fn print_tetris(tetris: &HashSet<(i128, i128)>) {
     let y_max = (tetris
         .iter()
         .map(|(_, y)| *y)
@@ -85,22 +86,19 @@ fn print_tetris(tetris: &HashSet<(i64, i64)>) {
     println!();
 }
 
-fn part1(input: &[Input]) -> Output {
-    use Rock::*;
 
-    let rock_cycle = vec![
-        Minus, Plus, L, I, Block,
-    ];
-    
-    let rounds = 2022;
+fn drop_rocks(rounds: usize, mut rock_round: usize, mut jet_round: usize, input: &[Input]) -> i128 {
+    let rock_cycle: Lazy<Vec<Rock>> = Lazy::new(|| {
+        use Rock::*;
+        vec![Minus, Plus, L, I, Block]
+        });
 
-    let mut tetris: HashSet<(i64, i64)> = HashSet::new();
+    let mut tetris: HashSet<(i128, i128)> = HashSet::new();
     for i in 0..7 {
         tetris.insert((i, 0));
     }
 
     let mut block_generator = move || {
-        let mut rock_round = 0;
         loop {
             rock_round = (rock_round) % (rock_cycle.len()) + 1;
             yield rock_cycle[rock_round - 1];
@@ -108,7 +106,6 @@ fn part1(input: &[Input]) -> Output {
     };
 
     let mut jet_generator = move || {
-        let mut jet_round = 0;
         loop {
             jet_round = (jet_round) % (input.len()) + 1;
             yield input[jet_round - 1];
@@ -132,7 +129,7 @@ fn part1(input: &[Input]) -> Output {
                     let mut shift_shape = shape
                         .iter()
                         .map(|(x, y)| (x + movement, *y))
-                        .collect::<Vec<(i64, i64)>>();
+                        .collect::<Vec<(i128, i128)>>();
 
                     if shift_shape.iter().any(|(x, _)| *x < 0 || *x > 6) {
                         shift_shape = shape;
@@ -143,7 +140,7 @@ fn part1(input: &[Input]) -> Output {
                     let drop_shape = shift_shape
                         .iter()
                         .map(|(x, y)| (*x, y - 1))
-                        .collect::<Vec<(i64, i64)>>();
+                        .collect::<Vec<(i128, i128)>>();
 
                     if drop_shape.iter().any(|pos| tetris.contains(pos)) {
                         shift_shape.iter().for_each(|pos| { tetris.insert(*pos); });
@@ -161,8 +158,140 @@ fn part1(input: &[Input]) -> Output {
         .unwrap()
 }
 
+fn part1(input: &[Input]) -> Output {
+    let rounds = 2022;
+    drop_rocks(rounds, 0, 0, input)
+}
+
+fn create_pattern(rounds: usize, input: &[Input]) -> Vec<i128> {
+    let rock_cycle: Lazy<Vec<Rock>> = Lazy::new(|| {
+        use Rock::*;
+        vec![Minus, Plus, L, I, Block]
+        });
+
+    let mut tetris: HashSet<(i128, i128)> = HashSet::new();
+    for i in 0..7 {
+        tetris.insert((i, 0));
+    }
+
+    let mut block_generator = move || {
+        let mut rock_round = 0;
+        loop {
+            rock_round = (rock_round) % (rock_cycle.len()) + 1;
+            yield rock_cycle[rock_round - 1];
+        }
+    };
+
+    let mut jet_generator = move || {
+        let mut jet_round = 0;
+        loop {
+            jet_round = (jet_round) % (input.len()) + 1;
+            yield input[jet_round - 1];
+        }
+    };
+
+    let mut deltas = vec![];
+    let mut last = 0;
+    for _ in 0..rounds {
+        if let GeneratorState::Yielded(block) = Pin::new(&mut block_generator).resume(()){
+            let max_height = *tetris.iter()
+                .map(|(_, y)| y)
+                .max()
+                .unwrap();
+            deltas.push(max_height - last);
+            last = max_height;
+            let mut shape = block.get_shape(max_height);
+            loop {
+                if let GeneratorState::Yielded(jet) = Pin::new(&mut jet_generator).resume(()) {
+                    let movement = match jet {
+                        Jet::Right => 1,
+                        Jet::Left => -1,
+                    };
+
+                    let mut shift_shape = shape
+                        .iter()
+                        .map(|(x, y)| (x + movement, *y))
+                        .collect::<Vec<(i128, i128)>>();
+
+                    if shift_shape.iter().any(|(x, _)| *x < 0 || *x > 6) {
+                        shift_shape = shape;
+                    } else if shift_shape.iter().any(|pos| tetris.contains(pos)) {
+                        shift_shape = shape;
+                    } else {
+                    }
+                    let drop_shape = shift_shape
+                        .iter()
+                        .map(|(x, y)| (*x, y - 1))
+                        .collect::<Vec<(i128, i128)>>();
+
+                    if drop_shape.iter().any(|pos| tetris.contains(pos)) {
+                        shift_shape.iter().for_each(|pos| { tetris.insert(*pos); });
+                        break;
+                    }
+                    shape = drop_shape;
+                }
+            }
+        }
+    }
+
+    let max_height = *tetris.iter()
+        .map(|(_, y)| y)
+        .max()
+        .unwrap();
+    deltas.push(max_height - last);
+    deltas
+}
+
 fn part2(input: &[Input]) -> Output {
-    0
+    println!("{}", input.len());
+    let sample = 10000;
+    let deltas = create_pattern(sample, input);
+    let mut found_offset = None;
+    let mut found_span = None;
+    'outer: for offset in 0..2500 {
+        for span in 2..(sample/2) {
+            let mut found = true;
+            let pattern = &deltas[offset..(offset + span)];
+            let mut found_chunk = None;
+            'iteration: for chunk in deltas[(offset + span)..].chunks(span) {
+                if chunk.len() != span {
+                    found = false;
+                    break 'iteration;
+                }
+                for i in 0..pattern.len() {
+                    if pattern[i] != chunk[i] {
+                        found = false;
+                        break 'iteration;
+                    }
+                }
+                found_chunk = Some(chunk);
+            }
+            if found {
+                println!("p: {pattern:?}");
+                println!("c: {:?}", found_chunk.unwrap());
+                assert_eq!(pattern.len(), found_chunk.unwrap().len());
+                found_offset = Some(offset);
+                found_span = Some(span);
+                break 'outer;
+            }
+        }
+    }
+
+    let offset = found_offset.unwrap();
+    let span = found_span.unwrap();
+    println!("OS: {offset}, Span: {span}");
+
+    let rounds = 1_000_000_000_000_usize;
+    let missing_rounds = (rounds - offset) % span;
+    let repeats = (rounds - offset) / span;
+
+    let start = deltas[0..offset].iter().sum::<i128>();
+    let pattern_result = deltas[offset..(offset + span)].iter().sum::<i128>();
+    println!("{pattern_result}");
+    let end = deltas[offset..=(offset + missing_rounds)].iter().sum::<i128>();
+
+
+    start + pattern_result * repeats as i128 + end 
 }
 
 #[cfg(test)]
