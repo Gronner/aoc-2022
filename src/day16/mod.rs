@@ -35,24 +35,24 @@ fn parse_input(input: Vec<String>) -> Input {
     input
         .iter()
         .for_each(|line| {
-            re.captures(line).map(|captured| {
+            if let Some(captured) = re.captures(line) {
                 let name = String::from(&captured[1]);
                 valve_to_idx.insert(name, idx);
                 flow_rates.insert(idx, captured[2].parse::<usize>().unwrap());
                 idx +=1;
-            });
+            }
         });
     input
         .iter()
         .for_each(|line| {
-            re.captures(line).map(|captured| {
+            if let Some(captured) = re.captures(line) {
                 let name = String::from(&captured[1]);
                 successors.insert(valve_to_idx[&name], captured[3]
                     .split(", ")
                     .map(|v| valve_to_idx[v])
                     .collect::<Vec<_>>()
                     );
-            });
+            }
         });
     Cache {
         valve_to_idx,

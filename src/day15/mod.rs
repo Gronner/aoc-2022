@@ -138,7 +138,7 @@ fn part2(input: &[Input]) -> Output {
                     }
                 }
             }
-            return (-1, -1);
+            (-1, -1)
         };
         while let GeneratorState::Yielded(pos) = Pin::new(&mut generator).resume(()) {
             if not_in_range(pos, size) {

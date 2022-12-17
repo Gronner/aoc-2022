@@ -123,12 +123,10 @@ fn create_pattern(rounds: usize, input: &[Input]) -> Vec<i128> {
                 .map(|(x, y)| (x + movement, *y))
                 .collect::<Vec<(i128, i128)>>();
 
-            if shift_shape.iter().any(|(x, _)| *x < 0 || *x > 6) {
+            if shift_shape.iter().any(|(x, _)| *x < 0 || *x > 6)
+                || shift_shape.iter().any(|pos| tetris.contains(pos)) {
                 shift_shape = shape;
-            } else if shift_shape.iter().any(|pos| tetris.contains(pos)) {
-                shift_shape = shape;
-            } else {
-            }
+            } 
             let drop_shape = shift_shape
                 .iter()
                 .map(|(x, y)| (*x, y - 1))
