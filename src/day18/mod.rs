@@ -1,5 +1,4 @@
 use std::collections::{HashSet, HashMap};
-use once_cell::unsync::Lazy;
 
 use aoc_downloader::download_day;
 
@@ -39,24 +38,21 @@ fn get_offsets() -> Vec<(i64, i64, i64)> {
     offsets.clone()
 }
 
-fn count_neighbours(grid: &HashMap<(i64, i64, i64), u64>, pos: (i64, i64, i64)) -> u64 {
-    let mut uncovered = *grid.get(&pos).unwrap();
-
-    uncovered -= get_offsets()
+fn count_neighbours(grid: &HashSet<(i64, i64, i64)>, pos: (i64, i64, i64)) -> u64 {
+    6 - get_offsets()
         .iter()
         .map(|off| (pos.0 + off.0, pos.1 + off.1, pos.2 + off.2))
-        .filter(|neigh| grid.contains_key(neigh))
-        .count() as u64;
-    uncovered
+        .filter(|neigh| grid.contains(neigh))
+        .count() as u64
 }
 
 fn part1(input: &[Input]) -> Output {
-    let mut exposed = HashMap::new();
+    let mut exposed = HashSet::new();
     for cube in input {
-        exposed.insert((cube[0], cube[1], cube[2]), 6);
+        exposed.insert((cube[0], cube[1], cube[2]));
     }
     let mut sum = 0;
-    for cube in exposed.keys() {
+    for cube in &exposed {
         sum += count_neighbours(&exposed, *cube)
     }
 
