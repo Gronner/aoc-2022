@@ -1,5 +1,5 @@
 use std::collections::{HashSet, HashMap};
-
+use once_cell::unsync::Lazy;
 use aoc_downloader::download_day;
 
 const DAY: u32 = 18;
