@@ -1,4 +1,4 @@
-use std::collections::{HashSet, HashMap};
+use std::collections::HashSet;
 use once_cell::unsync::Lazy;
 use aoc_downloader::download_day;
 

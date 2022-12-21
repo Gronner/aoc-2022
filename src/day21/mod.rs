@@ -38,7 +38,7 @@ impl FromStr for Monkey {
             Monkey::Job(
                 String::from(&captured[1]),
                 String::from(&captured[3]),
-                captured[2].chars().nth(0).unwrap(),
+                captured[2].chars().next().unwrap(),
             )
         }) {
             return Ok(monkey);
@@ -91,37 +91,22 @@ fn tree_walk(monkey_tree: &HashMap<String, Monkey>, node: &str) -> f64 {
     unreachable!();
 }
 
-fn equation_generator(monkey_tree: &HashMap<String, Monkey>, node: &str) -> String {
-    if node == "humn" {
-        return String::from("x");
-    }
-    if let Some(Monkey::Num(n)) = monkey_tree.get(node) {
-        return n.to_string();
-    }
-
-    if let Some(Monkey::Job(left, right, op)) = monkey_tree.get(node) {
-        return vec!["(".to_string(), equation_generator(monkey_tree, left), op.to_string(), equation_generator(monkey_tree, right), ")".to_string()].join(" ");
-    }
-
-    unreachable!();
-}
-
 fn part1(input: &HashMap<String, Monkey>) -> Output {
     let start = String::from("root");
-    tree_walk(&input, &start)
+    tree_walk(input, &start)
 }
 
 fn part2(input: &HashMap<String, Monkey>) -> f64{
     let mut input = input.clone();
     let (left, right) = &input.get(&"root".to_string()).and_then(|job| {
         if let Monkey::Job(m1, m2, _) = job {
-            return Some((m1.clone(), m2.clone()));
+            Some((m1.clone(), m2.clone()))
         } else {
-            return None;
-        };
+            None
+        }
     }).unwrap();
 
-    let result = tree_walk(&input, &right);
+    let result = tree_walk(&input, right);
 
     let mut low = 0.0;
     let mut high = 10_000_000_000_000.0;
@@ -133,7 +118,7 @@ fn part2(input: &HashMap<String, Monkey>) -> f64{
                 *job = Monkey::Num(pivot);
             }
         });
-        match result.total_cmp(&tree_walk(&input, &left)) {
+        match result.total_cmp(&tree_walk(&input, left)) {
             std::cmp::Ordering::Less => low = pivot,
             std::cmp::Ordering::Equal => return pivot,
             std::cmp::Ordering::Greater => high = pivot,

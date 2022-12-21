@@ -1,4 +1,4 @@
-use std::{str::FromStr, collections::HashMap};
+use std::str::FromStr;
 use std::num::ParseIntError;
 use rayon::prelude::*;
 
@@ -18,8 +18,6 @@ fn get_input() -> Vec<String> {
 
 type Input = Blueprint;
 type Output = u64;
-
-type Cost = (u64, u64, u64);
 
 fn parse_input(input: Vec<String>) -> Vec<Input> {
     input
