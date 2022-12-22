@@ -1,5 +1,5 @@
 use aoc_downloader::download_day;
-use std::{collections::HashMap, str::FromStr, num::ParseIntError};
+use std::{collections::{HashMap, HashSet}, str::FromStr, num::ParseIntError};
 
 const DAY: u32 = 22;
 
@@ -57,7 +57,6 @@ fn parse_input(input: Vec<String>) -> (HashMap<Coords, char>, Vec<Command>) {
             continue;
         }
         let mut x = 1;
-        println!("{line}");
         for c in line.chars() {
             if c == '.' || c == '#' {
                 map.insert((x, y), c);
@@ -180,7 +179,6 @@ fn walk_map(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) ->
                             e => panic!("Unkown heading: {}", e),
                         }
                     }
-                    println!("{:?}", me);
                 }
             },
             Command::Direction(turn) => {
@@ -189,7 +187,6 @@ fn walk_map(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) ->
                 } if *turn == 'L' {
                     me.head = if (me.head - 1) == -1 { 3 } else { me.head - 1};
                 }
-                println!("{:?}", me);
             },
         }
     }
@@ -199,7 +196,6 @@ fn walk_map(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) ->
 
 fn part1(input: &(HashMap<Coords, char>, Vec<Command>)) -> Output {
     let map = input.0.clone();
-    println!("{:?}", map);
     let comms = &input.1;
     let upper_left_x = map
         .keys()
@@ -210,8 +206,238 @@ fn part1(input: &(HashMap<Coords, char>, Vec<Command>)) -> Output {
     walk_map((*upper_left_x, 1), &map, &comms).get_score()
 }
 
+fn walk_cube(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) -> Me {
+    let mut me = Me {
+        pos: start,
+        head: 0,
+    };
+
+    let af = (51..=100)
+        .map(|x| (x, 0))
+        .collect::<HashSet<Coords>>();
+    let fa = (151..=200)
+        .map(|y| (0, y))
+        .collect::<HashSet<Coords>>();
+
+    let ae = (1..=50)
+        .map(|y| (50, y))
+        .collect::<HashSet<Coords>>();
+    let ea = (101..=150)
+        .map(|y| (0, y))
+        .collect::<HashSet<Coords>>();
+
+    let bc = (101..=150)
+        .map(|x| (x, 51))
+        .collect::<HashSet<Coords>>();
+    let cb = (51..=100)
+        .map(|y| (101, y))
+        .collect::<HashSet<Coords>>();
+
+    let bd = (1..=50)
+        .map(|y| (151, y))
+        .collect::<HashSet<Coords>>();
+    let db = (101..=150)
+        .map(|y| (101, y))
+        .collect::<HashSet<Coords>>();
+
+    let bf = (101..=150)
+        .map(|x| (x, 0))
+        .collect::<HashSet<Coords>>();
+    let fb= (1..=50)
+        .map(|x| (x, 201))
+        .collect::<HashSet<Coords>>();
+
+    let ce = (51..=100)
+        .map(|y| (50, y))
+        .collect::<HashSet<Coords>>();
+    let ec = (1..=50)
+        .map(|x| (x, 100))
+        .collect::<HashSet<Coords>>();
+
+    let df = (51..=100)
+        .map(|x| (x, 151))
+        .collect::<HashSet<Coords>>();
+    let fd = (151..=200)
+        .map(|y| (51, y))
+        .collect::<HashSet<Coords>>();
+
+
+    for comm in comms {
+        match comm {
+            Command::Movement(length) => {
+                for _ in 1..=*length {
+                    let offset = match me.head {
+                        0 => (1, 0),
+                        1 => (0, 1),
+                        2 => (-1, 0),
+                        3 => (0, -1),
+                        e => panic!("Unkown heading: {}", e),
+                    };
+                    if let Some(field) = map.get(&(me.pos.0 + offset.0, me.pos.1 + offset.1)) {
+                        if *field == '.' {
+                            me.pos = (me.pos.0 + offset.0, me.pos.1 + offset.1);
+                        } else {
+                            break;
+                        }
+                    } else {
+                        match me.head {
+                            0 => {
+                                let mut next_pos = (me.pos.0 + offset.0, me.pos.1 + offset.1);
+                                let mut heading = 0;
+                                if bd.contains(&next_pos) {
+                                    let x = 100;
+                                    let y = 101 + (50 - me.pos.1);
+                                    heading = 2;
+                                    next_pos = (x, y);
+                                } else if cb.contains(&next_pos) {
+                                    let x = me.pos.1 + 50;
+                                    let y = 50;
+                                    heading = 3;
+                                    next_pos = (x, y);
+                                } else if db.contains(&next_pos) {
+                                    let x = 150;
+                                    let y = 50 + (101 - me.pos.1);
+                                    heading = 2;
+                                    next_pos = (x, y);
+                                } else if fd.contains(&next_pos) {
+                                    let x = me.pos.1 - 100;
+                                    let y = 150;
+                                    heading = 3;
+                                    next_pos = (x, y);
+                                }  else {
+                                    panic!("Unexpected Transition from {:?} to {:?}", me, next_pos);
+                                }
+                                if let Some(field) = map.get(&next_pos) {
+                                    if *field == '.' {
+                                        me.pos = next_pos;
+                                        me.head = heading;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            },
+                            1 => {
+                                let mut next_pos = (me.pos.0 + offset.0, me.pos.1 + offset.1);
+                                let mut heading = 1;
+                                if bc.contains(&next_pos) {
+                                    let x = 100;
+                                    let y = me.pos.0 - 50;
+                                    heading = 2;
+                                    next_pos = (x, y);
+                                } else if df.contains(&next_pos) {
+                                    let x = 50;
+                                    let y = me.pos.0 + 100;
+                                    heading = 2;
+                                    next_pos = (x, y);
+                                } else if fb.contains(&next_pos) {
+                                    let x = 100 + me.pos.0;
+                                    let y = 1;
+                                    heading = 1;
+                                    next_pos = (x, y);
+                                }  else {
+                                    panic!("Unexpected Transition from {:?} to {:?}", me, next_pos);
+                                }
+                                if let Some(field) = map.get(&next_pos) {
+                                    if *field == '.' {
+                                        me.pos = next_pos;
+                                        me.head = heading;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            },
+                            2 => {
+                                let mut next_pos = (me.pos.0 + offset.0, me.pos.1 + offset.1);
+                                let mut heading = 2;
+                                if ae.contains(&next_pos) {
+                                    let x = 1;
+                                    let y = 101 + (50 - me.pos.1);
+                                    heading = 0;
+                                    next_pos = (x, y);
+                                } else if ce.contains(&next_pos) {
+                                    let x = me.pos.1 - 50;
+                                    let y = 101;
+                                    heading = 1;
+                                    next_pos = (x, y);
+                                } else if ea.contains(&next_pos) {
+                                    let x = 51;
+                                    let y = 50 + (101 - me.pos.1);
+                                    heading = 0;
+                                    next_pos = (x, y);
+                                } else if fa.contains(&next_pos) {
+                                    let x = me.pos.1 - 100;
+                                    let y = 1;
+                                    heading = 1;
+                                    next_pos = (x, y);
+                                }  else {
+                                    panic!("Unexpected Transition from {:?} to {:?}", me, next_pos);
+                                }
+                                if let Some(field) = map.get(&next_pos) {
+                                    if *field == '.' {
+                                        me.pos = next_pos;
+                                        me.head = heading;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            },
+                            3 => {
+                                let mut next_pos = (me.pos.0 + offset.0, me.pos.1 + offset.1);
+                                let mut heading = 3;
+                                if af.contains(&next_pos) {
+                                    let x = 1;
+                                    let y = me.pos.0 + 100;
+                                    heading = 0;
+                                    next_pos = (x, y);
+                                } else if bf.contains(&next_pos) {
+                                    let x = me.pos.0 - 100;
+                                    let y = 200;
+                                    heading = 3;
+                                    next_pos = (x, y);
+                                } else if ec.contains(&next_pos) {
+                                    let x = 51;
+                                    let y = me.pos.0 + 50;
+                                    heading = 0;
+                                    next_pos = (x, y);
+                                }  else {
+                                    panic!("Unexpected Transition from {:?} to {:?}", me, next_pos);
+                                }
+                                if let Some(field) = map.get(&next_pos) {
+                                    if *field == '.' {
+                                        me.pos = next_pos;
+                                        me.head = heading;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            },
+                            e => panic!("Unkown heading: {}", e),
+                        }
+                    }
+                }
+            },
+            Command::Direction(turn) => {
+                if *turn == 'R' {
+                    me.head = (me.head + 1) % 4;
+                } if *turn == 'L' {
+                    me.head = if (me.head - 1) == -1 { 3 } else { me.head - 1};
+                }
+            },
+        }
+    }
+
+    me
+}
 fn part2(input: &(HashMap<Coords, char>, Vec<Command>)) -> Output {
-    0
+    let map = input.0.clone();
+    let comms = &input.1;
+    let upper_left_x = map
+        .keys()
+        .filter(|(_, y)| *y == 1)
+        .map(|(x, _)| x)
+        .min()
+        .unwrap();
+    walk_cube((*upper_left_x, 1), &map, &comms).get_score()
 }
 
 #[cfg(test)]
