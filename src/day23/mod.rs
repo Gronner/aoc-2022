@@ -99,8 +99,6 @@ fn part1(input: &Input) -> Output {
     let mut no_movement = true;
     let mut map = input.clone();
 
-    draw_input(&map);
-
     let mut i = 1;
     loop {
         let mut proposed_movement: HashMap<Coords, (i64, Coords)> = HashMap::new();
@@ -210,7 +208,91 @@ fn part1(input: &Input) -> Output {
 }
 
 fn part2(input: &Input) -> Output {
-    0
+    use Directions::*;
+
+    let mut no_movement = true;
+    let mut map = input.clone();
+
+    draw_input(&map);
+
+    let mut i = 1;
+    loop {
+        let mut proposed_movement: HashMap<Coords, (i64, Coords)> = HashMap::new();
+        for elf in &map {
+            let mut movement_options = get_movement_options(i);
+            for offset in get_offsets() {
+                let neighbour = (elf.0 + offset.0, elf.1 + offset.1);
+                if map.contains(&neighbour) {
+                    match offset {
+                        (-1, -1) => {
+                            movement_options.retain(|m| *m != North);
+                            movement_options.retain(|m| *m != West);
+                        },
+                        (0, -1) => {
+                            movement_options.retain(|m| *m != North);
+                        },
+                        (1, -1) => {
+                            movement_options.retain(|m| *m != North);
+                            movement_options.retain(|m| *m != East);
+                        },
+                        (1,  0) => {
+                            movement_options.retain(|m| *m != East);
+                        },
+                        (-1,  1) => {
+                            movement_options.retain(|m| *m != South);
+                            movement_options.retain(|m| *m != West);
+                        },
+                        (0,  1) => {
+                            movement_options.retain(|m| *m != South);
+                        },
+                        (1,  1) => {
+                            movement_options.retain(|m| *m != South);
+                            movement_options.retain(|m| *m != East);
+                        },
+                        (-1,  0) => {
+                            movement_options.retain(|m| *m != West);
+                        },
+                        _ => unreachable!(),
+                    }
+                }
+            }
+            if movement_options.len() == 4 || movement_options.is_empty() {
+                continue;
+            }
+            no_movement = false;
+            let proposed_move = match movement_options[0] {
+                North => (elf.0, elf.1 - 1),
+                East => (elf.0 + 1, elf.1),
+                South => (elf.0, elf.1 + 1),
+                West => (elf.0 - 1, elf.1),
+            };
+            proposed_movement.entry(proposed_move).and_modify(|mut e| {
+                e.0 += 1;
+            })
+            .or_insert(
+                (
+                    1,
+                    *elf
+                )
+            );
+        }
+
+        if proposed_movement.is_empty() {
+            break;
+        }
+
+        for movement in proposed_movement {
+            if movement.1.0 > 1 {
+                continue;
+            }
+            assert!(map.remove(&movement.1.1));
+            map.insert(movement.0);
+        }
+        assert!(map.len() == input.len());
+        
+        i += 1;
+    }
+    i as i64
 }
 
 #[cfg(test)]
