@@ -174,10 +174,6 @@ fn part1(input: &Input) -> Output {
         }
         assert!(map.len() == input.len());
         
-        println!("Round {i}");
-        draw_input(&map);
-        println!();
-
         i += 1;
         if i > 10 {
             break;
@@ -212,8 +208,6 @@ fn part2(input: &Input) -> Output {
 
     let mut no_movement = true;
     let mut map = input.clone();
-
-    draw_input(&map);
 
     let mut i = 1;
     loop {
