@@ -1,5 +1,5 @@
 use aoc_downloader::download_day;
-use std::{collections::{HashMap, HashSet}, str::FromStr, num::ParseIntError};
+use std::collections::{HashMap, HashSet};
 
 const DAY: u32 = 22;
 
@@ -12,7 +12,6 @@ fn get_input() -> Vec<String> {
     reader.lines().collect::<Result<_, _>>().unwrap()
 }
 
-type Input = u64;
 type Output = i64;
 
 type Coords = (i64, i64);
@@ -28,7 +27,7 @@ fn from_str(line: &str) -> Vec<Command> {
     let mut comms = vec![];
 
     for c in line.chars() {
-        if c.is_digit(10) {
+        if c.is_ascii_digit() {
             buf.push(c);
             continue;
         } else {
@@ -101,7 +100,7 @@ fn walk_map(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) ->
                     1 => (0, 1),
                     2 => (-1, 0),
                     3 => (0, -1),
-                    e => panic!("Unkown heading: {}", e),
+                    e => panic!("Unkown heading: {e}"),
                 };
                 for _ in 1..=*length {
                     if let Some(field) = map.get(&(me.pos.0 + offset.0, me.pos.1 + offset.1)) {
@@ -176,7 +175,7 @@ fn walk_map(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) ->
                                     }
                                 }
                             },
-                            e => panic!("Unkown heading: {}", e),
+                            e => panic!("Unkown heading: {e}"),
                         }
                     }
                 }
@@ -184,7 +183,7 @@ fn walk_map(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) ->
             Command::Direction(turn) => {
                 if *turn == 'R' {
                     me.head = (me.head + 1) % 4;
-                } if *turn == 'L' {
+                } else if *turn == 'L' {
                     me.head = if (me.head - 1) == -1 { 3 } else { me.head - 1};
                 }
             },
@@ -203,7 +202,7 @@ fn part1(input: &(HashMap<Coords, char>, Vec<Command>)) -> Output {
         .map(|(x, _)| x)
         .min()
         .unwrap();
-    walk_map((*upper_left_x, 1), &map, &comms).get_score()
+    walk_map((*upper_left_x, 1), &map, comms).get_score()
 }
 
 fn walk_cube(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) -> Me {
@@ -271,7 +270,7 @@ fn walk_cube(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) -
                         1 => (0, 1),
                         2 => (-1, 0),
                         3 => (0, -1),
-                        e => panic!("Unkown heading: {}", e),
+                        e => panic!("Unkown heading: {e}"),
                     };
                     if let Some(field) = map.get(&(me.pos.0 + offset.0, me.pos.1 + offset.1)) {
                         if *field == '.' {
@@ -283,7 +282,7 @@ fn walk_cube(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) -
                         match me.head {
                             0 => {
                                 let mut next_pos = (me.pos.0 + offset.0, me.pos.1 + offset.1);
-                                let mut heading = 0;
+                                let heading;
                                 if bd.contains(&next_pos) {
                                     let x = 100;
                                     let y = 101 + (50 - me.pos.1);
@@ -305,7 +304,7 @@ fn walk_cube(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) -
                                     heading = 3;
                                     next_pos = (x, y);
                                 }  else {
-                                    panic!("Unexpected Transition from {:?} to {:?}", me, next_pos);
+                                    panic!("Unexpected Transition from {me:?} to {next_pos:?}");
                                 }
                                 if let Some(field) = map.get(&next_pos) {
                                     if *field == '.' {
@@ -318,7 +317,7 @@ fn walk_cube(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) -
                             },
                             1 => {
                                 let mut next_pos = (me.pos.0 + offset.0, me.pos.1 + offset.1);
-                                let mut heading = 1;
+                                let heading;
                                 if bc.contains(&next_pos) {
                                     let x = 100;
                                     let y = me.pos.0 - 50;
@@ -335,7 +334,7 @@ fn walk_cube(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) -
                                     heading = 1;
                                     next_pos = (x, y);
                                 }  else {
-                                    panic!("Unexpected Transition from {:?} to {:?}", me, next_pos);
+                                    panic!("Unexpected Transition from {me:?} to {next_pos:?}");
                                 }
                                 if let Some(field) = map.get(&next_pos) {
                                     if *field == '.' {
@@ -348,7 +347,7 @@ fn walk_cube(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) -
                             },
                             2 => {
                                 let mut next_pos = (me.pos.0 + offset.0, me.pos.1 + offset.1);
-                                let mut heading = 2;
+                                let heading;
                                 if ae.contains(&next_pos) {
                                     let x = 1;
                                     let y = 101 + (50 - me.pos.1);
@@ -370,7 +369,7 @@ fn walk_cube(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) -
                                     heading = 1;
                                     next_pos = (x, y);
                                 }  else {
-                                    panic!("Unexpected Transition from {:?} to {:?}", me, next_pos);
+                                    panic!("Unexpected Transition from {me:?} to {next_pos:?}");
                                 }
                                 if let Some(field) = map.get(&next_pos) {
                                     if *field == '.' {
@@ -383,7 +382,7 @@ fn walk_cube(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) -
                             },
                             3 => {
                                 let mut next_pos = (me.pos.0 + offset.0, me.pos.1 + offset.1);
-                                let mut heading = 3;
+                                let heading;
                                 if af.contains(&next_pos) {
                                     let x = 1;
                                     let y = me.pos.0 + 100;
@@ -400,7 +399,7 @@ fn walk_cube(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) -
                                     heading = 0;
                                     next_pos = (x, y);
                                 }  else {
-                                    panic!("Unexpected Transition from {:?} to {:?}", me, next_pos);
+                                    panic!("Unexpected Transition from {me:?} to {next_pos:?}");
                                 }
                                 if let Some(field) = map.get(&next_pos) {
                                     if *field == '.' {
@@ -411,7 +410,7 @@ fn walk_cube(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) -
                                     }
                                 }
                             },
-                            e => panic!("Unkown heading: {}", e),
+                            e => panic!("Unkown heading: {e}"),
                         }
                     }
                 }
@@ -419,7 +418,7 @@ fn walk_cube(start: Coords, map: &HashMap<Coords, char>, comms: &Vec<Command>) -
             Command::Direction(turn) => {
                 if *turn == 'R' {
                     me.head = (me.head + 1) % 4;
-                } if *turn == 'L' {
+                } else if *turn == 'L' {
                     me.head = if (me.head - 1) == -1 { 3 } else { me.head - 1};
                 }
             },
@@ -437,7 +436,7 @@ fn part2(input: &(HashMap<Coords, char>, Vec<Command>)) -> Output {
         .map(|(x, _)| x)
         .min()
         .unwrap();
-    walk_cube((*upper_left_x, 1), &map, &comms).get_score()
+    walk_cube((*upper_left_x, 1), &map, comms).get_score()
 }
 
 #[cfg(test)]
@@ -447,12 +446,12 @@ mod tests {
     #[test]
     fn day0_part1_output() {
         let input = parse_input(get_input());
-        assert_eq!(744475, part1(&input));
+        assert_eq!(13566, part1(&input));
     }
 
     #[test]
     fn day0_part2_output() {
         let input = parse_input(get_input());
-        assert_eq!(70276940, part2(&input));
+        assert_eq!(11451, part2(&input));
     }
 }

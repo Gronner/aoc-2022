@@ -76,12 +76,12 @@ mod tests {
     #[test]
     fn day0_part1_output() {
         let input = parse_input(get_input());
-        assert_eq!(16533, part1(&input));
+        assert_eq!(4426, part1(&input));
     }
 
     #[test]
     fn day0_part2_output() {
         let input = parse_input(get_input());
-        assert_eq!(4789999181006, part2(&input));
+        assert_eq!(8119137886612, part2(&input));
     }
 }

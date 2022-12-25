@@ -88,7 +88,7 @@ fn part1(input: &[Input]) -> Output {
     decimal_to_snafu(sum)
 }
 
-fn part2(input: &[Input]) -> Output {
+fn part2(_input: &[Input]) -> Output {
     String::from("Done")
 }
 
@@ -99,12 +99,12 @@ mod tests {
     #[test]
     fn day0_part1_output() {
         let input = parse_input(get_input());
-        assert_eq!(744475, part1(&input));
+        assert_eq!("2=12-100--1012-0=012", part1(&input));
     }
 
     #[test]
     fn day0_part2_output() {
         let input = parse_input(get_input());
-        assert_eq!(70276940, part2(&input));
+        assert_eq!("Done", part2(&input));
     }
 }

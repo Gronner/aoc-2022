@@ -52,6 +52,7 @@ enum Directions {
     West,
 }
 
+#[allow(dead_code)]
 fn draw_input(map: &Input) {
     let min_x = *map.iter()
         .map(|(x, _)| x)
@@ -96,7 +97,6 @@ fn get_movement_options(round: usize) -> Vec<Directions>{
 fn part1(input: &Input) -> Output {
     use Directions::*;
 
-    let mut no_movement = true;
     let mut map = input.clone();
 
     let mut i = 1;
@@ -140,14 +140,9 @@ fn part1(input: &Input) -> Output {
                     }
                 }
             }
-            if movement_options.len() == 4 {
-                no_movement = true;
+            if movement_options.len() == 4 || movement_options.is_empty() {
                 continue;
             }
-            if movement_options.is_empty() {
-                continue;
-            }
-            no_movement = false;
             let proposed_move = match movement_options[0] {
                 North => (elf.0, elf.1 - 1),
                 East => (elf.0 + 1, elf.1),
@@ -206,7 +201,6 @@ fn part1(input: &Input) -> Output {
 fn part2(input: &Input) -> Output {
     use Directions::*;
 
-    let mut no_movement = true;
     let mut map = input.clone();
 
     let mut i = 1;
@@ -253,7 +247,6 @@ fn part2(input: &Input) -> Output {
             if movement_options.len() == 4 || movement_options.is_empty() {
                 continue;
             }
-            no_movement = false;
             let proposed_move = match movement_options[0] {
                 North => (elf.0, elf.1 - 1),
                 East => (elf.0 + 1, elf.1),
@@ -296,12 +289,12 @@ mod tests {
     #[test]
     fn day0_part1_output() {
         let input = parse_input(get_input());
-        assert_eq!(744475, part1(&input));
+        assert_eq!(3940, part1(&input));
     }
 
     #[test]
     fn day0_part2_output() {
         let input = parse_input(get_input());
-        assert_eq!(70276940, part2(&input));
+        assert_eq!(990, part2(&input));
     }
 }

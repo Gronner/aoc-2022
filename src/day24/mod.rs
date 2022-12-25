@@ -1,4 +1,4 @@
-use std::collections::{HashSet, HashMap};
+use std::collections::HashSet;
 use once_cell::unsync::Lazy;
 
 use aoc_downloader::download_day;
@@ -14,7 +14,6 @@ fn get_input() -> Vec<String> {
     reader.lines().collect::<Result<_, _>>().unwrap()
 }
 
-type Input = u64;
 type Output = u64;
 type Coords = (i64, i64);
 
@@ -34,7 +33,7 @@ fn parse_input(input: Vec<String>) -> (Vec<(Blizzard, Coords)>, i64, i64) {
                 'v' => map.push((Down, (x as i64, y as i64))),
                 '^' => map.push((Up,  (x as i64, y as i64))),
                 '.' | '#' => continue,
-                e => panic!("Unkown symbol: {}", e),
+                e => panic!("Unkown symbol: {e}"),
             };
         }
     }
@@ -84,9 +83,8 @@ fn own_moves(pos: Coords, max: Coords) -> Vec<Coords> {
 
     let mut options = Vec::new();
     for offset in offsets.iter() {
-        if pos.0 + offset.0 == 1 && pos.1 + offset.1 == 0 {
-            options.push((pos.0 + offset.0 , pos.1 + offset.1));
-        } else if pos.0 + offset.0 == (max.0 - 1) && pos.1 + offset.1 == max.1 {
+        if pos.0 + offset.0 == 1 && pos.1 + offset.1 == 0
+            || pos.0 + offset.0 == (max.0 - 1) && pos.1 + offset.1 == max.1 {
             options.push((pos.0 + offset.0 , pos.1 + offset.1));
         } else if pos.0 + offset.0 == 0 || pos.0 + offset.0 == max.0
             || pos.1 + offset.1 <= 0 || pos.1 + offset.1 == max.1 
@@ -110,10 +108,6 @@ fn part1(input: &(Vec<(Blizzard, Coords)>, i64, i64)) -> Output {
     let mut minutes = 0;
     let mut prev = HashSet::new();
     prev.insert(start);
-    let blocked = map
-        .iter()
-        .map(|(_, pos)| *pos)
-        .collect::<HashSet<Coords>>();
     loop {
         map = move_blizzards(&map, (max_x, max_y));
         let blocked = map
@@ -150,10 +144,6 @@ fn part2(input: &(Vec<(Blizzard, Coords)>, i64, i64)) -> Output {
     let mut minutes = 0;
     let mut prev = HashSet::new();
     prev.insert(start);
-    let blocked = map
-        .iter()
-        .map(|(_, pos)| *pos)
-        .collect::<HashSet<Coords>>();
     let mut run = 1;
     loop {
         map = move_blizzards(&map, (max_x, max_y));
@@ -172,25 +162,18 @@ fn part2(input: &(Vec<(Blizzard, Coords)>, i64, i64)) -> Output {
             }
         }
         minutes += 1;
-        if run == 1 {
-            if next_options.contains(&end) {
+        if run == 1 && next_options.contains(&end) {
                 run = 2;
                 next_options.clear();
                 next_options.insert(end);
-            }
         }
-        if run == 2 {
-            if next_options.contains(&start) {
+        if run == 2 && next_options.contains(&start) {
                 run = 3;
                 next_options.clear();
                 next_options.insert(start);
-            }
         }
-        if run == 3 {
-            if next_options.contains(&end) {
+        if run == 3 && next_options.contains(&end) {
                 break;
-            }
-
         }
         prev = next_options.clone();
     }
@@ -204,12 +187,12 @@ mod tests {
     #[test]
     fn day0_part1_output() {
         let input = parse_input(get_input());
-        assert_eq!(744475, part1(&input));
+        assert_eq!(247, part1(&input));
     }
 
     #[test]
     fn day0_part2_output() {
         let input = parse_input(get_input());
-        assert_eq!(70276940, part2(&input));
+        assert_eq!(728, part2(&input));
     }
 }
