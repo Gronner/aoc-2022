@@ -71,7 +71,7 @@ fn decimal_to_snafu(mut decimal: i64) -> String {
 fn parse_input(input: Vec<String>) -> Vec<Input> {
     input
         .iter()
-        .map(|l| String::from(l))
+        .map(String::from)
         .collect::<Vec<_>>()
 }
 

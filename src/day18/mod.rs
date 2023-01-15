@@ -78,7 +78,7 @@ fn is_external(external: &mut HashSet<(i64, i64, i64)>, grid: &HashSet<(i64, i64
             || !(boundries.0..=boundries.1).any(|v| v == next.0)
             || !(boundries.2..=boundries.3).any(|v| v == next.1)
             || !(boundries.4..=boundries.5).any(|v| v == next.2) {
-            external.extend(visited.difference(grid).into_iter());
+            external.extend(visited.difference(grid));
             return true;
         }
 
